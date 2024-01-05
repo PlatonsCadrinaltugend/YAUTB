@@ -10,7 +10,7 @@ socket.addEventListener('open', ()=>{
     for (var channel of channels){
         socket.send(`JOIN #${channel}`);
         console.log(`Joined ${channel}`);
-        // socket.send(`PRIVMSG #${channel} :kok`);
+        socket.send(`PRIVMSG #${channel} :kok`);
     }
 
 })
@@ -26,6 +26,9 @@ socket.addEventListener('message', event => {
                 }
             }
         }
+        if (event.data.includes("ppPoof") && event.data.includes("deadcr1!deadcr1@deadcr1") && event.data.includes("kok") && event.data.includes("#yautb") && !event.data.includes("streamelements!streamelements@streamelements")){
+            socket.close();
+        }
     }
   
       // Respond to PING requests
@@ -40,5 +43,8 @@ socket.addEventListener('message', event => {
   });
 
   socket.addEventListener('close', event => {
+    for (var channel of channels){
+        socket.send(`PRIVMSG #${channel} :ppPoof`)
+    }
     console.log('WebSocket closed:', event);
   });
