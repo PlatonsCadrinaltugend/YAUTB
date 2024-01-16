@@ -72,10 +72,15 @@ socket.addEventListener('message', event => {
 			}
 			default: break;
 		}
-		if (message != null){
+		if (message != null && usernameSender == "deadcr1"){
 			if (message.startsWith("kok whitelist")){
-				var username = message.split("kok whitelist ")[1];
-				console.log(username);
+				var remove = false;
+				if (message.startsWith("kok whitelist remove")){
+					remove = true;
+					var username = message.split("kok whitelist remove ")[1];
+				}else{
+					var username = message.split("kok whitelist ")[1];
+				}
 					if (username) {
 						const user_info_url = `https://api.twitch.tv/helix/users?login=${username}`;
 						const headers = {
@@ -86,8 +91,7 @@ socket.addEventListener('message', event => {
 						const response = axios.get(user_info_url, { headers }).then(response => {
 							const userData = response.data.data[0];
 							const userId = userData.id;
-							console.log(userId);
-							saveWhitelist(userId);
+							saveWhitelist(userId, originChannel, username, remove);
 						})
 						.catch(error => {
 							console.error('Error retrieving user information:', error);
@@ -133,7 +137,7 @@ const save = (data, file) =>{
 	FileSystem.writeFile(file, jsonData, finished)
 }
 
-const saveWhitelist = (userID) =>{
+const saveWhitelist = (userID, originChannel, username, remove) =>{
 	FileSystem.readFile('Whitelist.json', (error, data) => {
 		// if the reading process failed,
 		// throwing the error
@@ -148,18 +152,24 @@ const saveWhitelist = (userID) =>{
 		// to convert it to a JavaScript object
 		const user = JSON.parse(data);
 	  	var list = Array.from(user['list']);
-		if(!list.includes(userID)){
+		if(!list.includes(userID) && remove == false){
 			list.push(`${userID}`);
+			socket.send(`PRIVMSG #${originChannel} :${username} has been whitelisted HYPERS`);
+		}else if(!list.includes(userID)){
+			socket.send(`PRIVMSG #${originChannel} :${username} is not whitelisted Saved`);
+		}else if(remove == true){
+			const index = list.indexOf(userID);
+			list.splice(index, 1);
+			socket.send(`PRIVMSG #${originChannel} :${username} has been removed from the whitelist Sadge`);
 		}
 		else{
 			console.log("Already Whitelisted");
+			socket.send(`PRIVMSG #${originChannel} :${username} is already whitelisted UNLUCKY`);
 		}
 		user['list'] = list;
-		console.log(user);
 		save(user, 'Whitelist.json');
 		// printing the JavaScript object
 		// retrieved from the JSON file
-		console.log(user);
 	  });
 
 }
@@ -180,12 +190,6 @@ getMessageContent = (event) =>{
 }
 
 getOriginChannelByEvent = (event) => {
-	if (event.data.match(/:([^!]+)!/) == null){
-		return null;
-	}
-	if (event.data.match(/:([^!]+)!/)['input']){
-		return null;
-	}
 	return event.data.match(/:([^!]+)!/)['input'].split("#")[1].split(" :")[0];
 }
 
