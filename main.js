@@ -25,18 +25,14 @@ socket.addEventListener('open', () => {
 
 socket.addEventListener('message', event => {
 	if (socket.readyState === WebSocket.OPEN) {
-		var message;
-		var originChannel;
-		var username;
 		if (!event.data.includes(":tmi.twitch.tv")){
-			const username = getUsernameByEvent(event);
+			const usernameSender = getUsernameByEvent(event);
 			const originChannel = getOriginChannelByEvent(event);
-			message = getMessageContent(event);
+			const message = getMessageContent(event);
 			console.log(`Message: ${message}.`);
-		
 		switch(message){
 			case "kok ppPoof": {	
-				if (username == "deadcr1" && originChannel == "yautb"){
+				if (usernameSender == "deadcr1" && originChannel == "yautb"){
 					for (var channel of channels) {
 						if (Messages){
 							socket.send(`PRIVMSG #${channel} :ppPoof`);
@@ -51,8 +47,8 @@ socket.addEventListener('message', event => {
 				break;
 			}
 			case "kok add kok": {
-				if (username) {
-					const user_info_url = `https://api.twitch.tv/helix/users?login=${username}`;
+				if (usernameSender) {
+					const user_info_url = `https://api.twitch.tv/helix/users?login=${usernameSender}`;
 					const headers = {
 						'Client-ID': 'gp762nuuoqcoxypju8c569th9wz7q5', 
 						'Authorization': `Bearer ${oAuth}`,
@@ -62,11 +58,11 @@ socket.addEventListener('message', event => {
 						const userData = response.data.data[0];
 						const userId = userData.id;
 						var channel = {
-							"name": username,
+							"name": usernameSender,
 							"id": userId,
 						}
-						console.log(`Username: ${username}, User ID: ${userId}`);
-						saveChannels(channel, 'channels.json');
+						console.log(`Username: ${usernameSender}, User ID: ${userId}`);
+						save(channel, 'channels.json');
 					})
 					.catch(error => {
 						console.error('Error retrieving user information:', error);
@@ -76,6 +72,30 @@ socket.addEventListener('message', event => {
 			}
 			default: break;
 		}
+		if (message != null){
+			if (message.startsWith("kok whitelist")){
+				var username = message.split("kok whitelist ")[1];
+				console.log(username);
+					if (username) {
+						const user_info_url = `https://api.twitch.tv/helix/users?login=${username}`;
+						const headers = {
+							'Client-ID': 'gp762nuuoqcoxypju8c569th9wz7q5', 
+							'Authorization': `Bearer ${oAuth}`,
+						};
+		
+						const response = axios.get(user_info_url, { headers }).then(response => {
+							const userData = response.data.data[0];
+							const userId = userData.id;
+							console.log(userId);
+							saveWhitelist(userId);
+						})
+						.catch(error => {
+							console.error('Error retrieving user information:', error);
+						});
+					}
+			}
+		}
+
 	}
 	// Respond to PING requests
 	if (event.data.includes("PING")) {
@@ -102,15 +122,46 @@ function getCurrentSong(){
 	
 }
 
-const saveChannels = (channel, file) =>{
+const save = (data, file) =>{
 	const finished = (error) => {
 		if(error){
 			console.error(error)
 			return;
 		}
 	}
-	const jsonData = JSON.stringify(channel,null, 2)
-	FileSystem.appendFile(file, jsonData, finished)
+	const jsonData = JSON.stringify(data,null, 2)
+	FileSystem.writeFile(file, jsonData, finished)
+}
+
+const saveWhitelist = (userID) =>{
+	FileSystem.readFile('Whitelist.json', (error, data) => {
+		// if the reading process failed,
+		// throwing the error
+		if (error) {
+		  // logging the error
+		  console.error(error);
+	  
+		  throw err;
+		}
+	  
+		// parsing the JSON object
+		// to convert it to a JavaScript object
+		const user = JSON.parse(data);
+	  	var list = Array.from(user['list']);
+		if(!list.includes(userID)){
+			list.push(`${userID}`);
+		}
+		else{
+			console.log("Already Whitelisted");
+		}
+		user['list'] = list;
+		console.log(user);
+		save(user, 'Whitelist.json');
+		// printing the JavaScript object
+		// retrieved from the JSON file
+		console.log(user);
+	  });
+
 }
 
 // returns the username of the sender of a message
@@ -129,6 +180,12 @@ getMessageContent = (event) =>{
 }
 
 getOriginChannelByEvent = (event) => {
+	if (event.data.match(/:([^!]+)!/) == null){
+		return null;
+	}
+	if (event.data.match(/:([^!]+)!/)['input']){
+		return null;
+	}
 	return event.data.match(/:([^!]+)!/)['input'].split("#")[1].split(" :")[0];
 }
 
