@@ -1,8 +1,11 @@
-const oAuth = "af2bya2gwdunc4hyzqt267q5mdn7j5";
+require('dotenv').config(); 
+const oAuth = process.env.TWITCHTOKEN;
 const nick = `njdagdoiad`;
 const channels = ["deadcr1", "yautb"];
 const Messages = false;
-
+const spotID = process.env.SPOTIFYCLIENTID
+const spotSecret = process.env.SPOTIFYCLIENTSECRET;
+var SpotAuth = null;
 const axios = require('axios');
 const FileSystem = require('fs');
 Object.assign(global, { WebSocket: require('ws') });
@@ -98,6 +101,21 @@ socket.addEventListener('message', event => {
 						});
 					}
 			}
+		}
+		if (message != null && message.startsWith("kok play")){
+			fetch("https://accounts.spotify.com/api/token", {
+  				body: `grant_type=client_credentials&client_id=${spotID}&client_secret=${spotSecret}`,
+  				headers: {
+    				"Content-Type": "application/x-www-form-urlencoded"
+ 				},
+  				method: "POST"
+			}).then(response => response.json())
+			.then(data => {
+				SpotAuth = data.access_token;
+				console.log(SpotAuth);
+			})
+			.catch(error => console.error(error));
+
 		}
 
 	}
