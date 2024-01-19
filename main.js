@@ -204,11 +204,24 @@ getMessageContent = (event) =>{
 	if (event.data.includes(".tmi.twitch.tv JOIN")){
 		return null;
 	}
-	return event.data.match(/:([^!]+)!/)['input'].split(":")[2].split("\n")[0].split("\r")[0];
+	const match = event.data.match(/:([^!]+)!/);
+	if (match == null){
+		console.log("match is null");
+		return null;
+	}
+	return match['input'].split(":")[2].split("\n")[0].split("\r")[0];
 }
 
 getOriginChannelByEvent = (event) => {
-	return event.data.match(/:([^!]+)!/)['input'].split("#")[1].split(" :")[0];
+	if (event.data.includes(".tmi.twitch.tv JOIN")){
+		return null;
+	}
+	const match = event.data.match(/:([^!]+)!/);
+	if (match == null){
+		console.log("match is null");
+		return null;
+	}
+	return match['input'].split("#")[1].split(" :")[0];
 }
 
 // TODO sometimes there is an error when starting the bot, figure out why it is there and remove it
