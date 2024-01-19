@@ -1,15 +1,19 @@
-require('dotenv').config(); 
-const oAuth = process.env.TWITCHTOKEN;
-const nick = `njdagdoiad`;
-const channels = ["deadcr1", "yautb"];
-const Messages = false;
-const spotID = process.env.SPOTIFYCLIENTID
-const spotSecret = process.env.SPOTIFYCLIENTSECRET;
-var SpotAuth = null;
+require('dotenv').config();
 const axios = require('axios');
 const FileSystem = require('fs');
 Object.assign(global, { WebSocket: require('ws') });
+const { parse, formatURI } = require('spotify-uri')
+const { stringify } = require('querystring');
 
+const oAuth = process.env.TWITCHTOKEN;
+const spotID = process.env.SPOTIFYCLIENTID
+const spotSecret = process.env.SPOTIFYCLIENTSECRET;
+const CLIENT_ID = process.env.CLIENTID;
+const SPOTIFY_REFRESH_TOKEN = process.env.SPOTIFYREFRESHTOKEN;
+const nick = `njdagdoiad`;
+const channels = ["deadcr1", "yautb"];
+const Messages = false;
+var SpotAuth = null;
 const socket = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
 
 socket.addEventListener('open', () => {
@@ -26,12 +30,12 @@ socket.addEventListener('open', () => {
 })
 
 
-socket.addEventListener('message', event => {
+socket.addEventListener('message', async event => {
 	if (socket.readyState === WebSocket.OPEN) {
 		if (!event.data.includes(":tmi.twitch.tv")){
 			const usernameSender = getUsernameByEvent(event);
 			const originChannel = getOriginChannelByEvent(event);
-			const message = getMessageContent(event);
+			var message = getMessageContent(event);
 			console.log(`Message: ${message}.`);
 		switch(message){
 			case "kok ppPoof": {	
@@ -53,7 +57,7 @@ socket.addEventListener('message', event => {
 				if (usernameSender) {
 					const user_info_url = `https://api.twitch.tv/helix/users?login=${usernameSender}`;
 					const headers = {
-						'Client-ID': 'gp762nuuoqcoxypju8c569th9wz7q5', 
+						'Client-ID': CLIENT_ID, 
 						'Authorization': `Bearer ${oAuth}`,
 					};
 	
@@ -87,7 +91,7 @@ socket.addEventListener('message', event => {
 					if (username) {
 						const user_info_url = `https://api.twitch.tv/helix/users?login=${username}`;
 						const headers = {
-							'Client-ID': 'gp762nuuoqcoxypju8c569th9wz7q5', 
+							'Client-ID': CLIENT_ID, 
 							'Authorization': `Bearer ${oAuth}`,
 						};
 		
@@ -102,20 +106,34 @@ socket.addEventListener('message', event => {
 					}
 			}
 		}
-		if (message != null && message.startsWith("kok play")){
-			fetch("https://accounts.spotify.com/api/token", {
-  				body: `grant_type=client_credentials&client_id=${spotID}&client_secret=${spotSecret}`,
+		if (message != null && message.startsWith("kok play ")){
+			if (SpotAuth == null){
+				const payload = {
+					method: 'POST',
+					headers: {
+					  'Content-Type': 'application/x-www-form-urlencoded',
+					  'Authorization': 'Basic ' + (new Buffer.from(spotID + ':' + spotSecret).toString('base64')),
+					},
+					body: stringify({
+					  grant_type: 'refresh_token',
+					  refresh_token: SPOTIFY_REFRESH_TOKEN,
+					}),
+				  }
+				  await fetch("https://accounts.spotify.com/api/token", payload).then(response => response.json()).then(data => {
+					SpotAuth = data["access_token"];
+					console.log(data)}).catch(error => console.error(error));
+				}
+			message = message.split(" ")[2];
+			var uri = parse(message)["uri"];
+			uri.split("?")[0];
+			uri = formatURI(uri);
+			console.log(uri);
+			fetch(`https://api.spotify.com/v1/me/player/queue?uri=${uri}`, {
   				headers: {
-    				"Content-Type": "application/x-www-form-urlencoded"
- 				},
+    			Authorization: `Bearer ${SpotAuth}`
+  				},
   				method: "POST"
-			}).then(response => response.json())
-			.then(data => {
-				SpotAuth = data.access_token;
-				console.log(SpotAuth);
-			})
-			.catch(error => console.error(error));
-
+			}).catch(error => console.error(error));
 		}
 
 	}
@@ -204,7 +222,11 @@ getMessageContent = (event) =>{
 	if (event.data.includes(".tmi.twitch.tv JOIN")){
 		return null;
 	}
-	return event.data.match(/:([^!]+)!/)['input'].split(":")[2].split("\n")[0].split("\r")[0];
+	var list = event.data.match(/:([^!]+)!/)['input'].split(":");
+	list.splice(0,2);
+	list = list.join(":");
+	list.split("\n")[0].split("\r")[0];
+	return list;
 }
 
 getOriginChannelByEvent = (event) => {
