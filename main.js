@@ -4,6 +4,7 @@ const FileSystem = require('fs');
 Object.assign(global, { WebSocket: require('ws') });
 const { parse, formatURI } = require('spotify-uri')
 const { stringify } = require('querystring');
+const fs = require('fs').promises;
 
 const oAuth = process.env.TWITCHTOKEN;
 const spotID = process.env.SPOTIFYCLIENTID
@@ -14,6 +15,7 @@ const nick = `njdagdoiad`;
 const channels = ["deadcr1", "yautb"];
 const Messages = false;
 var SpotAuth = null;
+
 const socket = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
 
 socket.addEventListener('open', () => {
@@ -50,33 +52,23 @@ socket.addEventListener('message', async event => {
 				break;
 			}
 			case "kok": {
+				let userID = await getUserIdByUserName("Gaastraa").then(function(data) {return data;}).catch((error) => console.log(error));
+				let bool = await userIDIsOnWhitelist(userID).then(function(data) {return data;}).catch((error) => console.log(error));
+				console.log(bool);
 				socket.send(`PRIVMSG #${originChannel} :kok`);
 				break;
 			}
 			case "kok add kok": {
 				if (usernameSender) {
-					const user_info_url = `https://api.twitch.tv/helix/users?login=${usernameSender}`;
-					const headers = {
-						'Client-ID': CLIENT_ID, 
-						'Authorization': `Bearer ${oAuth}`,
-					};
-	
-					const response = axios.get(user_info_url, { headers }).then(response => {
-						const userData = response.data.data[0];
-						const userId = userData.id;
+					userId = await getUserIdByUserName(usernameSender).then(function(data) {return data;}).catch((error) => console.log(error));
 						var channel = {
 							"name": usernameSender,
 							"id": userId,
 						}
 						console.log(`Username: ${usernameSender}, User ID: ${userId}`);
 						save(channel, 'channels.json');
-					})
-					.catch(error => {
-						console.error('Error retrieving user information:', error);
-					});
-				
+					}
 				}
-			}
 			default: break;
 		}
 		if (message != null && usernameSender == "deadcr1"){
@@ -89,20 +81,8 @@ socket.addEventListener('message', async event => {
 					var username = message.split("kok whitelist ")[1];
 				}
 					if (username) {
-						const user_info_url = `https://api.twitch.tv/helix/users?login=${username}`;
-						const headers = {
-							'Client-ID': CLIENT_ID, 
-							'Authorization': `Bearer ${oAuth}`,
-						};
-		
-						const response = axios.get(user_info_url, { headers }).then(response => {
-							const userData = response.data.data[0];
-							const userId = userData.id;
-							saveWhitelist(userId, originChannel, username, remove);
-						})
-						.catch(error => {
-							console.error('Error retrieving user information:', error);
-						});
+						let userId = await getUserIdByUserName(username).then(function(data) {return data;}).catch((error) => console.log(error));
+						saveWhitelist(userId, originChannel, username, remove);
 					}
 			}
 		}
@@ -204,8 +184,6 @@ const saveWhitelist = (userID, originChannel, username, remove) =>{
 		}
 		user['list'] = list;
 		save(user, 'Whitelist.json');
-		// printing the JavaScript object
-		// retrieved from the JSON file
 	  });
 
 }
@@ -230,7 +208,7 @@ getMessageContent = (event) =>{
 	var list = event.data.match(/:([^!]+)!/)['input'].split(":");
 	list.splice(0,2);
 	list = list.join(":");
-	list.split("\n")[0].split("\r")[0];
+	list = list.split("\n")[0].split("\r")[0];
 	return list;
 }
 
@@ -247,3 +225,28 @@ getOriginChannelByEvent = (event) => {
 }
 
 // TODO sometimes there is an error when starting the bot, figure out why it is there and remove it
+
+async function userIDIsOnWhitelist (id) {
+	let data = await fs.readFile('Whitelist.json', "binary");
+	const obj = JSON.parse(data);
+	let list = Array.from(obj['list']);
+	return list.includes(id);
+}
+
+
+async function getUserIdByUserName(Username){
+	let userID = null;
+	const user_info_url = `https://api.twitch.tv/helix/users?login=${Username}`;
+	const headers = {
+		'Client-ID': CLIENT_ID, 
+		'Authorization': `Bearer ${oAuth}`,
+	};
+	const response = await axios.get(user_info_url, { headers }).then(response => {
+		const userData = response.data.data[0];
+		console.log(userData);
+		userID = userData['id'].toString();
+		}).catch(error => {
+		console.error('Error retrieving user information:', error);
+	});
+	return userID;
+}
