@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({path : '../.env'});
 Object.assign(global, { WebSocket: require('ws') });
 const { parse, formatURI } = require('spotify-uri');
 const { stringify } = require('querystring');
@@ -51,7 +51,7 @@ socket.addEventListener('message', async event => {
 			}
 			case "kok": {
 				let userID = await util.getUserIdByUserName("Gaastraa").then(function(data) {return data;}).catch((error) => console.log(error));
-				let bool = await userIDIsOnWhitelist(userID).then(function(data) {return data;}).catch((error) => console.log(error));
+				let bool = await whitelist.userIDIsOnWhitelist(userID).then(function(data) {return data;}).catch((error) => console.log(error));
 				console.log(bool);
 				socket.send(`PRIVMSG #${originChannel} :kok`);
 				break;
@@ -64,7 +64,7 @@ socket.addEventListener('message', async event => {
 							"id": userId,
 						}
 						console.log(`Username: ${usernameSender}, User ID: ${userId}`);
-						save(channel, 'channels.json');
+						save(channel, '../data/channels.json');
 					}
 				}
 			default: break;

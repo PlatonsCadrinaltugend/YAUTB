@@ -3,7 +3,7 @@ const FileSystem = util.FileSystem;
 exports.fs = fs = require('fs').promises;
 
 exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove, socket) =>{
-	FileSystem.readFile('Whitelist.json', (error, data) => {
+	FileSystem.readFile('../data/Whitelist.json', (error, data) => {
 		// if the reading process failed,
 		// throwing the error
 		if (error) {
@@ -31,12 +31,12 @@ exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove
 			socket.send(`PRIVMSG #${originChannel} :${username} is already whitelisted UNLUCKY`);
 		}
 		user['list'] = list;
-		save(user, 'Whitelist.json');
+		save(user, '../data/Whitelist.json');
 	  });
 }
 
 exports.userIDIsOnWhitelist = async function userIDIsOnWhitelist (id) {
-	let data = await fs.readFile('Whitelist.json', "binary");
+	let data = await fs.readFile('../data/Whitelist.json', "binary");
 	const obj = JSON.parse(data);
 	let list = Array.from(obj['list']);
 	return list.includes(id);
