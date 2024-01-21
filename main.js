@@ -2,9 +2,8 @@ require('dotenv').config();
 Object.assign(global, { WebSocket: require('ws') });
 const { parse, formatURI } = require('spotify-uri');
 const { stringify } = require('querystring');
-const fs = require('fs').promises;
 var util = require('./Util.js');
-const FileSystem = util.FileSystem;
+var whitelist = require('./whitelist.js');
 
 const oAuth = util.oAuth;
 const spotID = process.env.SPOTIFYCLIENTID
@@ -31,13 +30,12 @@ socket.addEventListener('open', () => {
 
 })
 
-
 socket.addEventListener('message', async event => {
 	if (socket.readyState === WebSocket.OPEN) {
 		if (!event.data.includes(":tmi.twitch.tv")){
-			const usernameSender = getUsernameByEvent(event);
+			const usernameSender = util.getUsernameByEvent(event);
 			const originChannel = util.getOriginChannelByEvent(event);
-			var message = getMessageContent(event);
+			var message = util.getMessageContent(event);
 			console.log(`Message: ${message}.`);
 		switch(message){
 			case "kok ppPoof": {	
@@ -82,13 +80,13 @@ socket.addEventListener('message', async event => {
 				}
 					if (username) {
 						let userId = await util.getUserIdByUserName(username).then(function(data) {return data;}).catch((error) => console.log(error));
-						saveWhitelist(userId, originChannel, username, remove);
+						whitelist.saveWhitelist(userId, originChannel, username, remove, socket);
 					}
 			}
 		}
 		if (message != null && message.startsWith("kok play ")){
 			let userID = await util.getUserIdByUserName(usernameSender).then(function(data) {return data;}).catch((error) => console.log(error));
-			let bool = await userIDIsOnWhitelist(userID).then(function(data) {return data;}).catch((error) => console.log(error));
+			let bool = await util.userIDIsOnWhitelist(userID).then(function(data) {return data;}).catch((error) => console.log(error));
 			if (bool){
 				if (SpotAuth == null){
 					const payload = {
@@ -137,52 +135,3 @@ socket.addEventListener('close', event => {
 });
 
 // //TODO Bot join and part methods, saving channel and connected spotify (?)
-
-function getCurrentSong(){
-	
-}
-
-
-const saveWhitelist = (userID, originChannel, username, remove) =>{
-	FileSystem.readFile('Whitelist.json', (error, data) => {
-		// if the reading process failed,
-		// throwing the error
-		if (error) {
-		  // logging the error
-		  console.error(error);
-	  
-		  throw err;
-		}
-	  
-		// parsing the JSON object
-		// to convert it to a JavaScript object
-		const user = JSON.parse(data);
-	  	var list = Array.from(user['list']);
-		if(!list.includes(userID) && remove == false){
-			list.push(`${userID}`);
-			socket.send(`PRIVMSG #${originChannel} :${username} has been whitelisted HYPERS`);
-		}else if(!list.includes(userID)){
-			socket.send(`PRIVMSG #${originChannel} :${username} is not whitelisted Saved`);
-		}else if(remove == true){
-			const index = list.indexOf(userID);
-			list.splice(index, 1);
-			socket.send(`PRIVMSG #${originChannel} :${username} has been removed from the whitelist Sadge`);
-		}
-		else{
-			console.log("Already Whitelisted");
-			socket.send(`PRIVMSG #${originChannel} :${username} is already whitelisted UNLUCKY`);
-		}
-		user['list'] = list;
-		save(user, 'Whitelist.json');
-	  });
-
-}
-
-// TODO sometimes there is an error when starting the bot, figure out why it is there and remove it
-
-async function userIDIsOnWhitelist (id) {
-	let data = await fs.readFile('Whitelist.json', "binary");
-	const obj = JSON.parse(data);
-	let list = Array.from(obj['list']);
-	return list.includes(id);
-}
