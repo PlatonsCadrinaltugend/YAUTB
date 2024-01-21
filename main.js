@@ -1,15 +1,15 @@
 require('dotenv').config();
-const axios = require('axios');
-const FileSystem = require('fs');
 Object.assign(global, { WebSocket: require('ws') });
-const { parse, formatURI } = require('spotify-uri')
+const { parse, formatURI } = require('spotify-uri');
 const { stringify } = require('querystring');
 const fs = require('fs').promises;
+var util = require('./Util.js');
+const FileSystem = util.FileSystem;
 
-const oAuth = process.env.TWITCHTOKEN;
+const oAuth = util.oAuth;
 const spotID = process.env.SPOTIFYCLIENTID
 const spotSecret = process.env.SPOTIFYCLIENTSECRET;
-const CLIENT_ID = process.env.CLIENTID;
+
 const SPOTIFY_REFRESH_TOKEN = process.env.SPOTIFYREFRESHTOKEN;
 const nick = `njdagdoiad`;
 const channels = ["deadcr1", "yautb"];
@@ -36,7 +36,7 @@ socket.addEventListener('message', async event => {
 	if (socket.readyState === WebSocket.OPEN) {
 		if (!event.data.includes(":tmi.twitch.tv")){
 			const usernameSender = getUsernameByEvent(event);
-			const originChannel = getOriginChannelByEvent(event);
+			const originChannel = util.getOriginChannelByEvent(event);
 			var message = getMessageContent(event);
 			console.log(`Message: ${message}.`);
 		switch(message){
@@ -52,7 +52,7 @@ socket.addEventListener('message', async event => {
 				break;
 			}
 			case "kok": {
-				let userID = await getUserIdByUserName("Gaastraa").then(function(data) {return data;}).catch((error) => console.log(error));
+				let userID = await util.getUserIdByUserName("Gaastraa").then(function(data) {return data;}).catch((error) => console.log(error));
 				let bool = await userIDIsOnWhitelist(userID).then(function(data) {return data;}).catch((error) => console.log(error));
 				console.log(bool);
 				socket.send(`PRIVMSG #${originChannel} :kok`);
@@ -60,7 +60,7 @@ socket.addEventListener('message', async event => {
 			}
 			case "kok add kok": {
 				if (usernameSender) {
-					userId = await getUserIdByUserName(usernameSender).then(function(data) {return data;}).catch((error) => console.log(error));
+					userId = await util.getUserIdByUserName(usernameSender).then(function(data) {return data;}).catch((error) => console.log(error));
 						var channel = {
 							"name": usernameSender,
 							"id": userId,
@@ -81,39 +81,43 @@ socket.addEventListener('message', async event => {
 					var username = message.split("kok whitelist ")[1];
 				}
 					if (username) {
-						let userId = await getUserIdByUserName(username).then(function(data) {return data;}).catch((error) => console.log(error));
+						let userId = await util.getUserIdByUserName(username).then(function(data) {return data;}).catch((error) => console.log(error));
 						saveWhitelist(userId, originChannel, username, remove);
 					}
 			}
 		}
 		if (message != null && message.startsWith("kok play ")){
-			if (SpotAuth == null){
-				const payload = {
-					method: 'POST',
+			let userID = await util.getUserIdByUserName(usernameSender).then(function(data) {return data;}).catch((error) => console.log(error));
+			let bool = await userIDIsOnWhitelist(userID).then(function(data) {return data;}).catch((error) => console.log(error));
+			if (bool){
+				if (SpotAuth == null){
+					const payload = {
+						method: 'POST',
+						headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+						'Authorization': 'Basic ' + (new Buffer.from(spotID + ':' + spotSecret).toString('base64')),
+						},
+						body: stringify({
+						grant_type: 'refresh_token',
+						refresh_token: SPOTIFY_REFRESH_TOKEN,
+						}),
+					}
+					await fetch("https://accounts.spotify.com/api/token", payload).then(response => response.json()).then(data => {
+						SpotAuth = data["access_token"];
+						console.log(data)}).catch(error => console.error(error));
+					}
+				message = message.split(" ")[2];
+				var uri = parse(message)["uri"];
+				uri.split("?")[0];
+				uri = formatURI(uri);
+				console.log(uri);
+				fetch(`https://api.spotify.com/v1/me/player/queue?uri=${uri}`, {
 					headers: {
-					  'Content-Type': 'application/x-www-form-urlencoded',
-					  'Authorization': 'Basic ' + (new Buffer.from(spotID + ':' + spotSecret).toString('base64')),
+					Authorization: `Bearer ${SpotAuth}`
 					},
-					body: stringify({
-					  grant_type: 'refresh_token',
-					  refresh_token: SPOTIFY_REFRESH_TOKEN,
-					}),
-				  }
-				  await fetch("https://accounts.spotify.com/api/token", payload).then(response => response.json()).then(data => {
-					SpotAuth = data["access_token"];
-					console.log(data)}).catch(error => console.error(error));
-				}
-			message = message.split(" ")[2];
-			var uri = parse(message)["uri"];
-			uri.split("?")[0];
-			uri = formatURI(uri);
-			console.log(uri);
-			fetch(`https://api.spotify.com/v1/me/player/queue?uri=${uri}`, {
-  				headers: {
-    			Authorization: `Bearer ${SpotAuth}`
-  				},
-  				method: "POST"
-			}).catch(error => console.error(error));
+					method: "POST"
+				}).catch(error => console.error(error));
+			}
 		}
 
 	}
@@ -134,24 +138,10 @@ socket.addEventListener('close', event => {
 
 // //TODO Bot join and part methods, saving channel and connected spotify (?)
 
-async function playSongBySpotifylink(link){
-	//TODO
-}
-
 function getCurrentSong(){
 	
 }
 
-const save = (data, file) =>{
-	const finished = (error) => {
-		if(error){
-			console.error(error)
-			return;
-		}
-	}
-	const jsonData = JSON.stringify(data,null, 2)
-	FileSystem.writeFile(file, jsonData, finished)
-}
 
 const saveWhitelist = (userID, originChannel, username, remove) =>{
 	FileSystem.readFile('Whitelist.json', (error, data) => {
@@ -188,42 +178,6 @@ const saveWhitelist = (userID, originChannel, username, remove) =>{
 
 }
 
-// returns the username of the sender of a message
-getUsernameByEvent = (event) => {
-	const usernameMatch = event.data.match(/:([^!]+)!/);
-	const username = usernameMatch ? usernameMatch[1] : null;
-	return username;
-}
-
-getMessageContent = (event) =>{
-	console.log(event.data.match(/:([^!]+)!/));
-	if (event.data.includes(".tmi.twitch.tv JOIN")){
-		return null;
-	}
-	const match = event.data.match(/:([^!]+)!/);
-	if (match == null){
-		console.log("match is null");
-		return null;
-	}
-	var list = event.data.match(/:([^!]+)!/)['input'].split(":");
-	list.splice(0,2);
-	list = list.join(":");
-	list = list.split("\n")[0].split("\r")[0];
-	return list;
-}
-
-getOriginChannelByEvent = (event) => {
-	if (event.data.includes(".tmi.twitch.tv JOIN")){
-		return null;
-	}
-	const match = event.data.match(/:([^!]+)!/);
-	if (match == null){
-		console.log("match is null");
-		return null;
-	}
-	return match['input'].split("#")[1].split(" :")[0];
-}
-
 // TODO sometimes there is an error when starting the bot, figure out why it is there and remove it
 
 async function userIDIsOnWhitelist (id) {
@@ -231,22 +185,4 @@ async function userIDIsOnWhitelist (id) {
 	const obj = JSON.parse(data);
 	let list = Array.from(obj['list']);
 	return list.includes(id);
-}
-
-
-async function getUserIdByUserName(Username){
-	let userID = null;
-	const user_info_url = `https://api.twitch.tv/helix/users?login=${Username}`;
-	const headers = {
-		'Client-ID': CLIENT_ID, 
-		'Authorization': `Bearer ${oAuth}`,
-	};
-	const response = await axios.get(user_info_url, { headers }).then(response => {
-		const userData = response.data.data[0];
-		console.log(userData);
-		userID = userData['id'].toString();
-		}).catch(error => {
-		console.error('Error retrieving user information:', error);
-	});
-	return userID;
 }
