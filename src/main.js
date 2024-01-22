@@ -32,18 +32,31 @@ socket.addEventListener('message', async event => {
 			console.log(`Message: ${message}.`);
 		if (message != null && message.startsWith(Prefix)){
 			message = util.getMessageWithoutPrefix(message);
-			let username = message.split(" ")[1];
-			let id = await util.getUserIdByUserName(username);
+			console.log(message);
 			let idsender = await util.getUserIdByUserName(usernameSender);
 			if (message.startsWith("ban")){
+				let username = message.split(" ")[1];
+				let id = await util.getUserIdByUserName(username);
 				await modactions.banUser(id, username, usernameSender, idsender).then(function(data) {return data;}).catch((error) => console.log(error));
 			}
 			if (message.startsWith("unban")){
+				let username = message.split(" ")[1];
+				let id = await util.getUserIdByUserName(username);
 				await modactions.unbanUser(id);
 			}
 			if (message.startsWith("timeout")){
 				let time = message.split(" ")[2];
 				await modactions.timeoutUser(id, username, usernameSender, idsender, time).then(function(data) {return data;}).catch((error) => console.log(error));
+			}
+			switch(message){
+				case "song":{
+					spotify.getCurrentSong(socket, originChannel);
+					break;
+				}
+				default: {
+					socket.send(`PRIVMSG #${originChannel} :No such command found`);
+					break;
+				} 
 			}
 		}
 		switch(message){
