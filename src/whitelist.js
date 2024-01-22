@@ -41,3 +41,5 @@ exports.userIDIsOnWhitelist = async function userIDIsOnWhitelist (id) {
 	let list = Array.from(obj['list']);
 	return list.includes(id);
 }
+
+//TODO split whitelist into musiccontroller and modactionscontroller

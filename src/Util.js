@@ -2,6 +2,8 @@ exports.CLIENT_ID = CLIENT_ID = process.env.CLIENTID;
 exports.oAuth = oAuth = process.env.TWITCHTOKEN;
 const axios = require('axios');
 exports.FileSystem = FileSystem = require('fs');
+exports.Prefix = Prefix = "!";
+exports.BOTID = BOTID = "1013898275";
 
 
 exports.getUserIdByUserName = async function getUserIdByUserName(Username){
@@ -66,4 +68,10 @@ exports.save = save = (data, file) =>{
 	}
 	const jsonData = JSON.stringify(data,null, 2)
 	FileSystem.writeFile(file, jsonData, finished)
+}
+
+exports.getMessageWithoutPrefix = getMessageWithoutPrefix = (message) =>{
+	if (message.startsWith(Prefix)){
+		return message.slice(Prefix.length);
+	}
 }

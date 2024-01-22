@@ -1,21 +1,14 @@
 require('dotenv').config({path : '../.env'});
 Object.assign(global, { WebSocket: require('ws') });
-const { parse, formatURI } = require('spotify-uri');
-const { stringify } = require('querystring');
 var util = require('./Util.js');
 var whitelist = require('./whitelist.js');
-
+var spotify = require('./spotify.js');
+var modactions = require('./modactions.js');
 const oAuth = util.oAuth;
-const spotID = process.env.SPOTIFYCLIENTID
-const spotSecret = process.env.SPOTIFYCLIENTSECRET;
-const BOTID = process.env.BOTID;
-const SPOTIFY_REFRESH_TOKEN = process.env.SPOTIFYREFRESHTOKEN;
+const BOTID = util.BOTID;
 const nick = `njdagdoiad`;
 const channels = ["deadcr1", "yautb"];
 const Messages = false;
-var SpotAuth = null;
-const Prefix = "!";
-
 const socket = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
 
 socket.addEventListener('open', () => {
@@ -28,7 +21,6 @@ socket.addEventListener('open', () => {
 			socket.send(`PRIVMSG #${channel} :kok`);
 		}
 	}
-
 })
 
 socket.addEventListener('message', async event => {
@@ -39,37 +31,19 @@ socket.addEventListener('message', async event => {
 			var message = util.getMessageContent(event);
 			console.log(`Message: ${message}.`);
 		if (message != null && message.startsWith(Prefix)){
-			message = message.slice(Prefix.length);
+			message = util.getMessageWithoutPrefix(message);
 			let username = message.split(" ")[1];
 			let id = await util.getUserIdByUserName(username);
+			let idsender = await util.getUserIdByUserName(usernameSender);
 			if (message.startsWith("ban")){
-				if (whitelist.userIDIsOnWhitelist(id)){
-					console.log(id);
-					//currently only for my channel
-					const response = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=133856486&moderator_id=${BOTID}`, {
-						body: JSON.stringify({
-							"data": {
-								"user_id":`${id}`,
-								"reason":"Automated Ban By YAUTB"
-							}
-						}),
-					headers: {
-						Authorization: `Bearer ${oAuth}`,
-						"Client-Id": util.CLIENT_ID,
-						"Content-Type": "application/json"
-					},
-					method: "POST"
-					}).then(console.log(`Banned User ${username}`)).catch((error) => console.log(error));
-				}}
+				await modactions.banUser(id, username, usernameSender, idsender).then(function(data) {return data;}).catch((error) => console.log(error));
+			}
 			if (message.startsWith("unban")){
-				const response = fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=133856486&moderator_id=${BOTID}&user_id=${id}`, {
-					headers: {
-					  Authorization: `Bearer ${oAuth}`,
-					  "Client-Id": util.CLIENT_ID
-					},
-					method: "DELETE"
-				  })
-				  
+				await modactions.unbanUser(id);
+			}
+			if (message.startsWith("timeout")){
+				let time = message.split(" ")[2];
+				await modactions.timeoutUser(id, username, usernameSender, idsender, time).then(function(data) {return data;}).catch((error) => console.log(error));
 			}
 		}
 		switch(message){
@@ -85,9 +59,6 @@ socket.addEventListener('message', async event => {
 				break;
 			}
 			case "kok": {
-				let userID = await util.getUserIdByUserName("Gaastraa").then(function(data) {return data;}).catch((error) => console.log(error));
-				let bool = await whitelist.userIDIsOnWhitelist(userID).then(function(data) {return data;}).catch((error) => console.log(error));
-				console.log(bool);
 				socket.send(`PRIVMSG #${originChannel} :kok`);
 				break;
 			}
@@ -121,45 +92,14 @@ socket.addEventListener('message', async event => {
 		}
 		if (message != null && message.startsWith("kok play ")){
 			let userID = await util.getUserIdByUserName(usernameSender).then(function(data) {return data;}).catch((error) => console.log(error));
-			let bool = await util.userIDIsOnWhitelist(userID).then(function(data) {return data;}).catch((error) => console.log(error));
-			if (bool){
-				if (SpotAuth == null){
-					const payload = {
-						method: 'POST',
-						headers: {
-						'Content-Type': 'application/x-www-form-urlencoded',
-						'Authorization': 'Basic ' + (new Buffer.from(spotID + ':' + spotSecret).toString('base64')),
-						},
-						body: stringify({
-						grant_type: 'refresh_token',
-						refresh_token: SPOTIFY_REFRESH_TOKEN,
-						}),
-					}
-					await fetch("https://accounts.spotify.com/api/token", payload).then(response => response.json()).then(data => {
-						SpotAuth = data["access_token"];
-						console.log(data)}).catch(error => console.error(error));
-					}
-				message = message.split(" ")[2];
-				var uri = parse(message)["uri"];
-				uri.split("?")[0];
-				uri = formatURI(uri);
-				console.log(uri);
-				fetch(`https://api.spotify.com/v1/me/player/queue?uri=${uri}`, {
-					headers: {
-					Authorization: `Bearer ${SpotAuth}`
-					},
-					method: "POST"
-				}).catch(error => console.error(error));
-			}
+			spotify.addSongToQueue(userID, message);
 		}
-
 	}
 	// Respond to PING requests
 	if (event.data.includes("PING")) {
 		socket.send("PONG");
 	}
 }});
-
 
 socket.addEventListener('error', error => {
 	console.error('WebSocket error:', error);
