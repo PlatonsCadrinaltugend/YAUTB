@@ -8,12 +8,13 @@ var whitelist = require('./whitelist.js');
 const oAuth = util.oAuth;
 const spotID = process.env.SPOTIFYCLIENTID
 const spotSecret = process.env.SPOTIFYCLIENTSECRET;
-
+const BOTID = process.env.BOTID;
 const SPOTIFY_REFRESH_TOKEN = process.env.SPOTIFYREFRESHTOKEN;
 const nick = `njdagdoiad`;
 const channels = ["deadcr1", "yautb"];
 const Messages = false;
 var SpotAuth = null;
+const Prefix = "!";
 
 const socket = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
 
@@ -37,6 +38,40 @@ socket.addEventListener('message', async event => {
 			const originChannel = util.getOriginChannelByEvent(event);
 			var message = util.getMessageContent(event);
 			console.log(`Message: ${message}.`);
+		if (message != null && message.startsWith(Prefix)){
+			message = message.slice(Prefix.length);
+			let username = message.split(" ")[1];
+			let id = await util.getUserIdByUserName(username);
+			if (message.startsWith("ban")){
+				if (whitelist.userIDIsOnWhitelist(id)){
+					console.log(id);
+					//currently only for my channel
+					const response = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=133856486&moderator_id=${BOTID}`, {
+						body: JSON.stringify({
+							"data": {
+								"user_id":`${id}`,
+								"reason":"Automated Ban By YAUTB"
+							}
+						}),
+					headers: {
+						Authorization: `Bearer ${oAuth}`,
+						"Client-Id": util.CLIENT_ID,
+						"Content-Type": "application/json"
+					},
+					method: "POST"
+					}).then(console.log(`Banned User ${username}`)).catch((error) => console.log(error));
+				}}
+			if (message.startsWith("unban")){
+				const response = fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=133856486&moderator_id=${BOTID}&user_id=${id}`, {
+					headers: {
+					  Authorization: `Bearer ${oAuth}`,
+					  "Client-Id": util.CLIENT_ID
+					},
+					method: "DELETE"
+				  })
+				  
+			}
+		}
 		switch(message){
 			case "kok ppPoof": {	
 				if (usernameSender == "deadcr1" && originChannel == "yautb"){

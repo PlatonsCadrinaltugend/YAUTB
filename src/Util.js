@@ -1,4 +1,4 @@
-const CLIENT_ID = process.env.CLIENTID;
+exports.CLIENT_ID = CLIENT_ID = process.env.CLIENTID;
 exports.oAuth = oAuth = process.env.TWITCHTOKEN;
 const axios = require('axios');
 exports.FileSystem = FileSystem = require('fs');
