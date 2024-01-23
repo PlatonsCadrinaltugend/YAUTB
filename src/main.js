@@ -49,10 +49,15 @@ socket.addEventListener('message', async event => {
 				await modactions.timeoutUser(id, username, usernameSender, idsender, time).then(function(data) {return data;}).catch((error) => console.log(error));
 			}
 			switch(message){
+				case "skip":{
+					spotify.skipSong(socket, originChannel, idsender);
+					break;
+				}
 				case "song":{
 					spotify.getCurrentSong(socket, originChannel);
 					break;
 				}
+				
 				default: {
 					socket.send(`PRIVMSG #${originChannel} :No such command found`);
 					break;
