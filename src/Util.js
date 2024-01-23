@@ -75,3 +75,32 @@ exports.getMessageWithoutPrefix = getMessageWithoutPrefix = (message) =>{
 		return message.slice(Prefix.length);
 	}
 }
+
+exports.saveChannel = async function saveChannel (channel, file) {
+	let data = await FileSystem.promises.readFile('../data/channels.json', "binary");
+	const obj = JSON.parse(data);
+	let list = Array.from(obj['list']);
+	list.push(channel);
+	obj["list"] = list;
+	save(obj, file);
+} 
+
+exports.getChannelNamesOfJoinedChannels = async function getChannelNamesOfJoinedChannels (){
+	const data = await FileSystem.promises.readFile('../data/channels.json', (error, data) => {
+		// if the reading process failed,
+		// throwing the error
+		if (error) {
+		  // logging the error
+		  console.error(error);
+		  throw err;
+		}
+	})
+	const obj = JSON.parse(data);
+	let list = Array.from(obj['list']);
+	let IDlist = new Array();
+	for (let x=0;x<list.length;x++){	
+		IDlist.push(list[x]['name']);
+	}
+	console.log(IDlist);
+	return IDlist;
+}

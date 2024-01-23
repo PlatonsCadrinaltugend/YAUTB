@@ -52,15 +52,15 @@ exports.getCurrentSong = async function getCurrentSong (socket, originChannel){
 
 
 exports.skipSong = async function skipSong(socket, originChannel, userID){
-    await refreshToken();
     let bool = await whitelist.userIDIsOnWhitelist(userID).then(function(data) {return data;}).catch((error) => console.log(error));
 	if (bool){
-    fetch("https://api.spotify.com/v1/me/player/next", {
-        headers: {
-        Authorization: `Bearer ${SpotAuth}`
-        },
-        method: "POST"
-    }).then(socket.send(`PRIVMSG #${originChannel} :Sucessfully skipped current Song ApuApproved`)).catch((error) => {console.log(error), socket.send(`PRIVMSG #${originChannel} :There was an Error skipping the current Song.`)});
+        await refreshToken();
+        fetch("https://api.spotify.com/v1/me/player/next", {
+            headers: {
+            Authorization: `Bearer ${SpotAuth}`
+            },
+            method: "POST"
+        }).then(socket.send(`PRIVMSG #${originChannel} :Sucessfully skipped current Song ApuApproved`)).catch((error) => {console.log(error), socket.send(`PRIVMSG #${originChannel} :There was an Error skipping the current Song.`)});
     }
     else {
         socket.send(`PRIVMSG #${originChannel} :You seem to be missing permission to use this command. Ask the broadcaster to permit you to use this command.`)

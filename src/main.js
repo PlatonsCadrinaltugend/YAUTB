@@ -5,15 +5,16 @@ var whitelist = require('./whitelist.js');
 var spotify = require('./spotify.js');
 var modactions = require('./modactions.js');
 const oAuth = util.oAuth;
-const BOTID = util.BOTID;
+
 const nick = `njdagdoiad`;
-const channels = ["deadcr1", "yautb"];
 const Messages = false;
 const socket = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
 
-socket.addEventListener('open', () => {
+socket.addEventListener('open', async () => {
 	socket.send(`PASS oauth:${oAuth}`);
 	socket.send(`NICK ${nick}`);
+	let channels = await (util.getChannelNamesOfJoinedChannels()).then(function(data) {return data;}).catch((error) => console.log(error));
+	console.log(channels);
 	for (var channel of channels) {
 		socket.send(`JOIN #${channel}`);
 		console.log(`Joined ${channel}`);
@@ -48,7 +49,7 @@ socket.addEventListener('message', async event => {
 				let time = message.split(" ")[2];
 				await modactions.timeoutUser(id, username, usernameSender, idsender, time).then(function(data) {return data;}).catch((error) => console.log(error));
 			}
-			switch(message){
+			switch(message.split(" ")[0].toLowerCase()){
 				case "skip":{
 					spotify.skipSong(socket, originChannel, idsender);
 					break;
@@ -57,7 +58,36 @@ socket.addEventListener('message', async event => {
 					spotify.getCurrentSong(socket, originChannel);
 					break;
 				}
-				
+				case "shutdown":{
+					if (usernameSender == "deadcr1" && originChannel == "yautb"){
+						for (var channel of channels) {
+							if (Messages){
+								socket.send(`PRIVMSG #${channel} :Deadge`);
+							}
+						}
+						socket.close();
+					}
+					else{
+						socket.send(`PRIVMSG #${originChannel} :An Error occured, either you have insufficient privileges or this is not the right channel.`)
+					}
+					break;
+				}
+				case "addtoownchannel":{
+					if (usernameSender) {
+						userId = await util.getUserIdByUserName(usernameSender).then(function(data) {return data;}).catch((error) => console.log(error));
+							var channel = {
+								"name": usernameSender,
+								"id": userId,
+							}
+							console.log(`Username: ${usernameSender}, User ID: ${userId}`);
+							socket.send(`PRIVMSG #${usernameSender} :Hello there :D`);
+							socket.send(`PRIVMSG #${originChannel} :I sucessfully joined your Channel ApuApproved`);
+							util.saveChannel(channel, '../data/channels.json');
+							socket.send(`JOIN #${usernameSender}`);
+							console.log(`Joined ${usernameSender}`);
+						}
+						break;
+					}
 				default: {
 					socket.send(`PRIVMSG #${originChannel} :No such command found`);
 					break;
@@ -65,32 +95,10 @@ socket.addEventListener('message', async event => {
 			}
 		}
 		switch(message){
-			case "kok ppPoof": {	
-				if (usernameSender == "deadcr1" && originChannel == "yautb"){
-					for (var channel of channels) {
-						if (Messages){
-							socket.send(`PRIVMSG #${channel} :ppPoof`);
-						}
-					}
-					socket.close();
-				}
-				break;
-			}
 			case "kok": {
 				socket.send(`PRIVMSG #${originChannel} :kok`);
 				break;
 			}
-			case "kok add kok": {
-				if (usernameSender) {
-					userId = await util.getUserIdByUserName(usernameSender).then(function(data) {return data;}).catch((error) => console.log(error));
-						var channel = {
-							"name": usernameSender,
-							"id": userId,
-						}
-						console.log(`Username: ${usernameSender}, User ID: ${userId}`);
-						save(channel, '../data/channels.json');
-					}
-				}
 			default: break;
 		}
 		if (message != null && usernameSender == "deadcr1"){
