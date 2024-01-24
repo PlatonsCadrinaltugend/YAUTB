@@ -39,6 +39,7 @@ exports.userIDIsOnWhitelist = async function userIDIsOnWhitelist (id) {
 	let data = await fs.readFile('../data/Whitelist.json', "binary");
 	const obj = JSON.parse(data);
 	let list = Array.from(obj['list']);
+	console.log(list);
 	return list.includes(id);
 }
 

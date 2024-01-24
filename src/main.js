@@ -29,6 +29,7 @@ socket.addEventListener('message', async event => {
 		if (!event.data.includes(":tmi.twitch.tv")){
 			const usernameSender = util.getUsernameByEvent(event);
 			const originChannel = util.getOriginChannelByEvent(event);
+			let originChannelID = await util.getUserIdByUserName(originChannel);
 			var message = util.getMessageContent(event);
 			console.log(`Message: ${message}.`);
 		if (message != null && message.startsWith(Prefix)){
@@ -38,16 +39,17 @@ socket.addEventListener('message', async event => {
 			if (message.startsWith("ban")){
 				let username = message.split(" ")[1];
 				let id = await util.getUserIdByUserName(username);
-				await modactions.banUser(id, username, usernameSender, idsender).then(function(data) {return data;}).catch((error) => console.log(error));
+				await modactions.banUser(id, username, usernameSender, idsender, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));
 			}
 			if (message.startsWith("unban")){
 				let username = message.split(" ")[1];
 				let id = await util.getUserIdByUserName(username);
-				await modactions.unbanUser(id);
+				await modactions.unbanUser(id, idsender, originChannelID);
 			}
 			if (message.startsWith("timeout")){
 				let time = message.split(" ")[2];
-				await modactions.timeoutUser(id, username, usernameSender, idsender, time).then(function(data) {return data;}).catch((error) => console.log(error));
+				let id = await util.getUserIdByUserName(username);
+				await modactions.timeoutUser(id, username, usernameSender, idsender, time, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));
 			}
 			switch(message.split(" ")[0].toLowerCase()){
 				case "skip":{
@@ -93,7 +95,9 @@ socket.addEventListener('message', async event => {
 					list = list.join(" ");
 					if (list && list != null){
 						util.saveIdea(list);
-						socket.send(`PRIVMSG #${originChannel} :saved your idea. Thank you for your help improving this bot luvv`);
+						socket.send(`PRIVMSG #${originChannel} :Saving your idea. Thank you for your help improving this bot luvv`);
+					}else{
+						socket.send(`PRIVMSG #${originChannel} :/me Usage: !idea <idea>`);
 					}
 					break;
 				}

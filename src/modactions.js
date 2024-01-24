@@ -1,11 +1,13 @@
 var whitelist = require('./whitelist.js');
 var util = require('./Util.js');
 
-exports.banUser = async function banUser (id, username, usernameSender, idsender){
+exports.banUser = async function banUser (id, username, usernameSender, idsender, originChannelID){
 	//TODO make sure the bot can ban users with @ prefix and moderators (optional)
-	if (whitelist.userIDIsOnWhitelist(idsender)){
+	let bool = await whitelist.userIDIsOnWhitelist(idsender);
+	if (bool){
+		console.log(idsender);
 		//currently only for my channel
-		const response = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=133856486&moderator_id=${BOTID}`, {
+		const response = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${originChannelID}&moderator_id=${BOTID}`, {
 			body: JSON.stringify({
 				"data": {
 					"user_id":`${id}`,
@@ -22,21 +24,26 @@ exports.banUser = async function banUser (id, username, usernameSender, idsender
 	}
 }
 
-exports.unbanUser = async function unbanUser (id){
-    const response = fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=133856486&moderator_id=${BOTID}&user_id=${id}`, {
-        headers: {
-          Authorization: `Bearer ${oAuth}`,
-          "Client-Id": util.CLIENT_ID
-        },
-        method: "DELETE"
-      }) 
+exports.unbanUser = async function unbanUser (id, idsender, originChannelID){
+	let bool = await whitelist.userIDIsOnWhitelist(idsender);
+	if (bool){
+		const response = fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${originChannelID}&moderator_id=${BOTID}&user_id=${id}`, {
+			headers: {
+			Authorization: `Bearer ${oAuth}`,
+			"Client-Id": util.CLIENT_ID
+			},
+			method: "DELETE"
+		}) 
+	}
+
 }
 
-exports.timeoutUser = async function timeoutUser (id, username, usernameSender, idsender, time){
+exports.timeoutUser = async function timeoutUser (id, username, usernameSender, idsender, time, originChannelID){
 	//TODO make sure the bot can ban users with @ prefix and moderators (optional)
-	if (whitelist.userIDIsOnWhitelist(idsender)){
+	bool = await whitelist.userIDIsOnWhitelist(idsender);
+	if (bool){
 		//currently only for my channel
-		const response = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=133856486&moderator_id=${BOTID}`, {
+		const response = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${originChannelID}&moderator_id=${BOTID}`, {
 			body: JSON.stringify({
 				"data": {
 					"user_id":`${id}`,
