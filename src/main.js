@@ -58,8 +58,18 @@ socket.addEventListener('message', async event => {
 					spotify.getCurrentSong(socket, originChannel);
 					break;
 				}
+				case "volume":{
+					if (message.split(" ").length == 2){
+						spotify.setVolume(message.split(" ")[1], socket, originChannel, idsender);
+					}
+					else{
+						spotify.getVolume(socket, originChannel, idsender);
+					}
+					break;
+				}
 				case "shutdown":{
 					if (usernameSender == "deadcr1" && originChannel == "yautb"){
+						let channels = await (util.getChannelNamesOfJoinedChannels()).then(function(data) {return data;}).catch((error) => console.log(error));
 						for (var channel of channels) {
 							if (Messages){
 								socket.send(`PRIVMSG #${channel} :Deadge`);

@@ -104,3 +104,5 @@ exports.getChannelNamesOfJoinedChannels = async function getChannelNamesOfJoined
 	console.log(IDlist);
 	return IDlist;
 }
+
+//TODO sendmsg function to remove duplicate lines
