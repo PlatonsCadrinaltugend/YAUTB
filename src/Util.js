@@ -77,7 +77,7 @@ exports.getMessageWithoutPrefix = getMessageWithoutPrefix = (message) =>{
 }
 
 exports.saveChannel = async function saveChannel (channel, file) {
-	let data = await FileSystem.promises.readFile('../data/channels.json', "binary");
+	let data = await FileSystem.promises.readFile('../data/util.json', "binary");
 	const obj = JSON.parse(data);
 	let list = Array.from(obj['list']);
 	list.push(channel);
@@ -86,7 +86,7 @@ exports.saveChannel = async function saveChannel (channel, file) {
 } 
 
 exports.getChannelNamesOfJoinedChannels = async function getChannelNamesOfJoinedChannels (){
-	const data = await FileSystem.promises.readFile('../data/channels.json', (error, data) => {
+	const data = await FileSystem.promises.readFile('../data/util.json', (error, data) => {
 		// if the reading process failed,
 		// throwing the error
 		if (error) {
@@ -103,6 +103,16 @@ exports.getChannelNamesOfJoinedChannels = async function getChannelNamesOfJoined
 	}
 	console.log(IDlist);
 	return IDlist;
+}
+
+exports.saveIdea = async function saveIdea(idea){
+	let file = '../data/util.json';
+	let data = await FileSystem.promises.readFile(file, "binary");
+	const obj = JSON.parse(data);
+	let list = Array.from(obj['idea']);
+	list.push(idea);
+	obj["idea"] = list;
+	save(obj, file);
 }
 
 //TODO sendmsg function to remove duplicate lines

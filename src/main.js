@@ -76,9 +76,24 @@ socket.addEventListener('message', async event => {
 				}
 				case "deactivate":
 				case "activate":{
+					//TODO fix codequality
 					if (usernameSender == originChannel){
 						modify = !modify;
 						socket.send(`PRIVMSG #${originChannel} :Set Modify-Musik to ${modify}`)
+					}
+					break;
+				}
+				case "v":{
+					await modactions.timeoutUser(idsender, username, "YAUTB", util.BOTID, 1);
+					break;
+				}
+				case "idea":{
+					let list = message.split(" ");
+					list.splice(0,1);
+					list = list.join(" ");
+					if (list && list != null){
+						util.saveIdea(list);
+						socket.send(`PRIVMSG #${originChannel} :saved your idea. Thank you for your help improving this bot luvv`);
 					}
 					break;
 				}
@@ -107,14 +122,13 @@ socket.addEventListener('message', async event => {
 							console.log(`Username: ${usernameSender}, User ID: ${userId}`);
 							socket.send(`PRIVMSG #${usernameSender} :Hello there :D`);
 							socket.send(`PRIVMSG #${originChannel} :I sucessfully joined your Channel ApuApproved`);
-							util.saveChannel(channel, '../data/channels.json');
+							util.saveChannel(channel, '../data/util.json');
 							socket.send(`JOIN #${usernameSender}`);
 							console.log(`Joined ${usernameSender}`);
 						}
 						break;
 					}
 				default: {
-					socket.send(`PRIVMSG #${originChannel} :No such command found`);
 					break;
 				} 
 			}
@@ -160,4 +174,6 @@ socket.addEventListener('close', event => {
 	console.log('WebSocket closed:', event);
 });
 
-// //TODO Bot join and part methods, saving channel and connected spotify (?)
+//TODO Bot join and part methods, saving channel and connected spotify (?)
+
+//TODO store all data in a json, save in relation to channel
