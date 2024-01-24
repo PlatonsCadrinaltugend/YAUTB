@@ -39,7 +39,7 @@ socket.addEventListener('message', async event => {
 			if (message.startsWith("ban")){
 				let username = message.split(" ")[1];
 				let id = await util.getUserIdByUserName(username);
-				await modactions.banUser(id, username, usernameSender, idsender, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));
+				await modactions.banUser(id, username, `Automated Ban By YAUTB. Authorized by ${usernameSender}`, idsender, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));
 			}
 			if (message.startsWith("unban")){
 				let username = message.split(" ")[1];
@@ -89,6 +89,17 @@ socket.addEventListener('message', async event => {
 					await modactions.timeoutUser(idsender, username, "YAUTB", util.BOTID, 1);
 					break;
 				}
+				case "crossban":{
+					if (usernameSender == "deadcr1"){
+						if (message.split(" ").length == 2){
+							let username = message.split(" ")[1];
+							let id = await util.getUserIdByUserName(username);
+							await modactions.crossban(id, username, idsender, originChannel);
+					}
+					}
+
+					break;
+				}
 				case "idea":{
 					let list = message.split(" ");
 					list.splice(0,1);
@@ -122,6 +133,7 @@ socket.addEventListener('message', async event => {
 							var channel = {
 								"name": usernameSender,
 								"id": userId,
+								"crossban-enabled":true
 							}
 							console.log(`Username: ${usernameSender}, User ID: ${userId}`);
 							socket.send(`PRIVMSG #${usernameSender} :Hello there :D`);
@@ -144,7 +156,7 @@ socket.addEventListener('message', async event => {
 			}
 			default: break;
 		}
-		if (message != null && usernameSender == "deadcr1"){
+		if (message != null && (usernameSender == originChannel || usernameSender =="deadcr1")){
 			if (message.startsWith("kok whitelist")){
 				var remove = false;
 				if (message.startsWith("kok whitelist remove")){
@@ -155,7 +167,7 @@ socket.addEventListener('message', async event => {
 				}
 					if (username) {
 						let userId = await util.getUserIdByUserName(username).then(function(data) {return data;}).catch((error) => console.log(error));
-						whitelist.saveWhitelist(userId, originChannel, username, remove, socket);
+						whitelist.saveWhitelist(userId, originChannel, username, remove, socket, originChannelID);
 					}
 			}
 		}

@@ -1,8 +1,9 @@
+const { channel } = require('diagnostics_channel');
 var util = require('./Util.js');
 const FileSystem = util.FileSystem;
 exports.fs = fs = require('fs').promises;
 
-exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove, socket) =>{
+exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove, socket, channelid) =>{
 	FileSystem.readFile('../data/Whitelist.json', (error, data) => {
 		// if the reading process failed,
 		// throwing the error
@@ -11,11 +12,13 @@ exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove
 		  console.error(error);
 		  throw err;
 		}
-	  
+		let list = [];
 		// parsing the JSON object
 		// to convert it to a JavaScript object
 		const user = JSON.parse(data);
-	  	var list = Array.from(user['list']);
+		if (user.hasOwnProperty(channelid)){
+			list = Array.from(user[channelid]);
+		}
 		if(!list.includes(userID) && remove == false){
 			list.push(`${userID}`);
 			socket.send(`PRIVMSG #${originChannel} :${username} has been whitelisted HYPERS`);
@@ -30,15 +33,15 @@ exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove
 			console.log("Already Whitelisted");
 			socket.send(`PRIVMSG #${originChannel} :${username} is already whitelisted UNLUCKY`);
 		}
-		user['list'] = list;
+		user[channelid] = list;
 		save(user, '../data/Whitelist.json');
 	  });
 }
 
-exports.userIDIsOnWhitelist = async function userIDIsOnWhitelist (id) {
+exports.userIDIsOnWhitelist = async function userIDIsOnWhitelist (id, channelid) {
 	let data = await fs.readFile('../data/Whitelist.json', "binary");
 	const obj = JSON.parse(data);
-	let list = Array.from(obj['list']);
+	let list = Array.from(obj[channelid]);
 	console.log(list);
 	return list.includes(id);
 }
