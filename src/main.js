@@ -5,7 +5,7 @@ var whitelist = require('./whitelist.js');
 var spotify = require('./spotify.js');
 var modactions = require('./modactions.js');
 const oAuth = util.oAuth;
-
+var modify = false;
 const nick = `njdagdoiad`;
 const Messages = false;
 const socket = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
@@ -51,19 +51,34 @@ socket.addEventListener('message', async event => {
 			}
 			switch(message.split(" ")[0].toLowerCase()){
 				case "skip":{
-					spotify.skipSong(socket, originChannel, idsender);
+					if (modify){
+						spotify.skipSong(socket, originChannel, idsender);
+					}
 					break;
 				}
 				case "song":{
-					spotify.getCurrentSong(socket, originChannel);
+					if (modify){
+						spotify.getCurrentSong(socket, originChannel);
+					}
 					break;
 				}
 				case "volume":{
-					if (message.split(" ").length == 2){
-						spotify.setVolume(message.split(" ")[1], socket, originChannel, idsender);
+					if (modify){
+						if (message.split(" ").length == 2){
+							spotify.setVolume(message.split(" ")[1], socket, originChannel, idsender);
+						}
+						else{
+							spotify.getVolume(socket, originChannel, idsender);
+						}
 					}
-					else{
-						spotify.getVolume(socket, originChannel, idsender);
+					break;
+
+				}
+				case "deactivate":
+				case "activate":{
+					if (usernameSender == originChannel){
+						modify = !modify;
+						socket.send(`PRIVMSG #${originChannel} :Set Modify-Musik to ${modify}`)
 					}
 					break;
 				}
