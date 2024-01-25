@@ -71,3 +71,29 @@ exports.crossban = async function crossban (UserID, username, idsender, originCh
 	}
 	console.log("CROSSBAN SUCESSFUL");
 }
+
+exports.enableCrossban = async function enableCrossban(idsender, bool){
+	let data = await fs.readFile('../data/util.json', "binary");
+	const obj = JSON.parse(data);
+	let list = Array.from(obj["list"]);
+	for (var channel of list){
+		if (channel.id == idsender){
+			channel.crossban = bool;
+		}
+	}
+	obj["list"] = list;
+	save(obj, '../data/util.json');
+
+}
+
+exports.filter = async function filter(message){
+	let data = await fs.readFile('../data/util.json', "binary");
+	const obj = JSON.parse(data);
+	let list = Array.from(obj["blacklisted_terms"]);
+	for (var elem of list){
+		if (message == elem){
+			return true;
+		}
+	}
+	return false;
+}

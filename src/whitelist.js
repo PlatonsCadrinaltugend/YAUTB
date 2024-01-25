@@ -41,9 +41,12 @@ exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove
 exports.userIDIsOnWhitelist = async function userIDIsOnWhitelist (id, channelid) {
 	let data = await fs.readFile('../data/Whitelist.json', "binary");
 	const obj = JSON.parse(data);
-	let list = Array.from(obj[channelid]);
-	console.log(list);
-	return list.includes(id);
+	if (obj.hasOwnProperty(channelid)){
+		let list = Array.from(obj[channelid]);
+		console.log(list);
+		return list.includes(id);
+	}
+	return false;
 }
 
 //TODO split whitelist into musiccontroller and modactionscontroller

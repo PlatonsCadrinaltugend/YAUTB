@@ -115,4 +115,15 @@ exports.saveIdea = async function saveIdea(idea){
 	save(obj, file);
 }
 
+exports.automodActivated = async function automodActivated(originChannel){
+	let data = await FileSystem.promises.readFile('../data/util.json', "binary");
+	const obj = JSON.parse(data);
+	let list = Array.from(obj['list']);
+	for (var elem of list){
+		if (elem.name == originChannel){
+			return elem.automod;
+		}
+	}
+	return false;
+}
 //TODO sendmsg function to remove duplicate lines

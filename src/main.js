@@ -32,10 +32,17 @@ socket.addEventListener('message', async event => {
 			let originChannelID = await util.getUserIdByUserName(originChannel);
 			var message = util.getMessageContent(event);
 			console.log(`Message: ${message}.`);
+			let idsender = await util.getUserIdByUserName(usernameSender);
+			let botInChannel = await util.automodActivated(originChannel);
+			if (botInChannel){
+				let filtertrue =await modactions.filter(message);
+				if (filtertrue){
+					await modactions.banUser(idsender, usernameSender, `Automod detected blocked term`, util.BOTID, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));;
+				}
+			}
 		if (message != null && message.startsWith(Prefix)){
 			message = util.getMessageWithoutPrefix(message);
 			console.log(message);
-			let idsender = await util.getUserIdByUserName(usernameSender);
 			if (message.startsWith("ban")){
 				let username = message.split(" ")[1];
 				let id = await util.getUserIdByUserName(username);
@@ -95,9 +102,17 @@ socket.addEventListener('message', async event => {
 							let username = message.split(" ")[1];
 							let id = await util.getUserIdByUserName(username);
 							await modactions.crossban(id, username, idsender, originChannel);
+						}
 					}
-					}
-
+					break;
+				}
+				case "enablecrossban":
+					await modactions.enableCrossban(idsender, true);
+					socket.send(`PRIVMSG #${originChannel} :Enabled crossbans for your channel ApuApproved`)
+					break;
+				case "disablecrossban":{
+					await modactions.enableCrossban(idsender, false);
+					socket.send(`PRIVMSG #${originChannel} :Disabled crossbans for your channel ApuApproved`)
 					break;
 				}
 				case "idea":{
