@@ -1,6 +1,7 @@
 exports.CLIENT_ID = CLIENT_ID = process.env.CLIENTID;
 exports.oAuth = oAuth = process.env.TWITCHTOKEN;
 const axios = require('axios');
+const { enableCrossban } = require('./modactions');
 exports.FileSystem = FileSystem = require('fs');
 exports.Prefix = Prefix = "!";
 exports.BOTID = BOTID = "1013898275";
@@ -125,5 +126,19 @@ exports.automodActivated = async function automodActivated(originChannel){
 		}
 	}
 	return false;
+}
+
+exports.setAutomod = async function setAutomod(channelID, bool){
+	let file = '../data/util.json';
+	let data = await FileSystem.promises.readFile(file, "binary");
+	const obj = JSON.parse(data);
+	let list = Array.from(obj['list']);
+	for (var elem of list){
+		if (elem.id == channelID){
+			elem.automod = bool;
+		}
+	}
+	obj['list'] = list;
+	save(obj, file);
 }
 //TODO sendmsg function to remove duplicate lines

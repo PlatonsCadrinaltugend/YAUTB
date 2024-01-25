@@ -88,7 +88,7 @@ socket.addEventListener('message', async event => {
 					//TODO fix codequality
 					if (usernameSender == originChannel){
 						modify = !modify;
-						socket.send(`PRIVMSG #${originChannel} :Set Modify-Musik to ${modify}`)
+						socket.send(`PRIVMSG #${originChannel} :/me Set Modify-Musik to ${modify}`)
 					}
 					break;
 				}
@@ -106,13 +106,21 @@ socket.addEventListener('message', async event => {
 					}
 					break;
 				}
+				case "enableautomod":
+					await util.setAutomod(idsender, true);
+					socket.send(`PRIVMSG #${originChannel} :/me Enabled automod for your channel ApuApproved`)
+					break;
+				case "disableautomod":
+					await util.setAutomod(idsender, false);
+					socket.send(`PRIVMSG #${originChannel} :/me Disabled automod for your channel ApuApproved`)
+					break;
 				case "enablecrossban":
 					await modactions.enableCrossban(idsender, true);
-					socket.send(`PRIVMSG #${originChannel} :Enabled crossbans for your channel ApuApproved`)
+					socket.send(`PRIVMSG #${originChannel} :/me Enabled crossbans for your channel ApuApproved`)
 					break;
 				case "disablecrossban":{
 					await modactions.enableCrossban(idsender, false);
-					socket.send(`PRIVMSG #${originChannel} :Disabled crossbans for your channel ApuApproved`)
+					socket.send(`PRIVMSG #${originChannel} :/me Disabled crossbans for your channel ApuApproved`)
 					break;
 				}
 				case "idea":{
