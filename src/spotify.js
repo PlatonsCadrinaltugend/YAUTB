@@ -5,22 +5,25 @@ var SpotAuth = null;
 var whitelist = require('./whitelist.js');
 const { stringify } = require('querystring');
 const { parse, formatURI, formatOpenURL } = require('spotify-uri');
-
-exports.addSongToQueue = async function addSongToQueue (userID, message) {
-	let bool = await whitelist.userIDIsOnWhitelist(userID).then(function(data) {return data;}).catch((error) => console.log(error));
+//TODO handle wrong inputs
+exports.addSongToQueue = async function addSongToQueue (userID, message, originChannelID) {
+	let bool = await whitelist.userIDIsOnWhitelist(userID, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));
+    console.log(bool);
 	if (bool){
-        await refreshToken();
-		message = message.split(" ")[2];
-		var uri = parse(message)["uri"];
-		uri.split("?")[0];
-		uri = formatURI(uri);
-		console.log(uri);
-		fetch(`https://api.spotify.com/v1/me/player/queue?uri=${uri}`, {
-			headers: {
-			Authorization: `Bearer ${SpotAuth}`
-			},
-			method: "POST"
-		}).then(console.log("Queued sucessfully")).catch(error => console.error(error));
+		message = message.split(" ")[1];
+        if (message.startsWith("http://open.spotify.com/track/") && message.length == 52){
+            await refreshToken();
+            var uri = parse(message)["uri"];
+            uri.split("?")[0];
+            uri = formatURI(uri);
+            console.log(uri);
+            fetch(`https://api.spotify.com/v1/me/player/queue?uri=${uri}`, {
+                headers: {
+                Authorization: `Bearer ${SpotAuth}`
+                },
+                method: "POST"
+            }).then(console.log("Queued sucessfully")).catch(error => console.error(error));
+        }
 	}
 }
 
@@ -51,8 +54,8 @@ exports.getCurrentSong = async function getCurrentSong (socket, originChannel){
     }).then(response => response.json()).then((data) => {let artists = data["item"]["artists"]; socket.send(`PRIVMSG #${originChannel} :Currently playing "${data["item"]["name"]}" by ${artists[0].name}. ${formatOpenURL(parse(data["item"]["uri"]))}`);}).catch((error)=>{console.log(error); socket.send(`PRIVMSG #${originChannel} :There was an Error while trying to retrieve Songinformation UNLUCKY`)})}
 
 
-exports.skipSong = async function skipSong(socket, originChannel, userID){
-    let bool = await whitelist.userIDIsOnWhitelist(userID).then(function(data) {return data;}).catch((error) => console.log(error));
+exports.skipSong = async function skipSong(socket, originChannel, userID, originChannelID){
+    let bool = await whitelist.userIDIsOnWhitelist(userID, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));
 	if (bool){
         await refreshToken();
         fetch("https://api.spotify.com/v1/me/player/next", {
