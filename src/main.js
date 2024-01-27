@@ -5,7 +5,7 @@ var whitelist = require('./whitelist.js');
 var spotify = require('./spotify.js');
 var modactions = require('./modactions.js');
 const oAuth = util.oAuth;
-var modify = false;
+var modify = true;
 const nick = `njdagdoiad`;
 const Messages = false;
 const socket = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
@@ -27,12 +27,17 @@ socket.addEventListener('open', async () => {
 socket.addEventListener('message', async event => {
 	if (socket.readyState === WebSocket.OPEN) {
 		if (!event.data.includes(":tmi.twitch.tv")){
-			const usernameSender = util.getUsernameByEvent(event);
-			const originChannel = util.getOriginChannelByEvent(event);
-			let originChannelID = await util.getUserIdByUserName(originChannel);
-			var message = util.getMessageContent(event);
-			console.log(`Message: ${message}.`);
-			let idsender = await util.getUserIdByUserName(usernameSender);
+			let MessageEvent = {
+				usernameSender: util.getUsernameByEvent(event),
+				originChannel: util.getOriginChannelByEvent(event),
+				originChannelID:  null,
+				message: util.getMessageContent(event),
+				idsender: null,
+			}
+			MessageEvent.originChannelID =await util.getUserIdByUserName(MessageEvent.originChannel);
+			MessageEvent.idsender = await util.getUserIdByUserName(MessageEvent.usernameSender);
+			//lowers botspeed by alot, but thats a problem for another day
+			let [usernameSender,originChannel, originChannelID, message, idsender] = [MessageEvent.usernameSender, MessageEvent.originChannel,MessageEvent.originChannelID, MessageEvent.message, MessageEvent.idsender]; 
 			let botInChannel = await util.automodActivated(originChannel);
 			if (botInChannel){
 				let filtertrue =await modactions.filter(message);
@@ -61,7 +66,7 @@ socket.addEventListener('message', async event => {
 			switch(message.split(" ")[0].toLowerCase()){
 				case "skip":{
 					if (modify){
-						spotify.skipSong(socket, originChannel, idsender);
+						spotify.skipSong(socket, originChannel, idsender, originChannelID);
 					}
 					break;
 				}
@@ -98,10 +103,19 @@ socket.addEventListener('message', async event => {
 				}
 				case "crossban":{
 					if (usernameSender == "deadcr1"){
-						if (message.split(" ").length == 2){
+						if (message.split(" ").length >= 2){
 							let username = message.split(" ")[1];
+							let message2 = message.split(" ");
+							message2.shift();
+							message2.shift();
+							console.log(message2);
+							let reason = message2.join(" ");
+							console.log(reason);
 							let id = await util.getUserIdByUserName(username);
-							await modactions.crossban(id, username, idsender, originChannel);
+							await modactions.crossban(id, username, idsender, originChannel, reason);
+						}
+						else{
+							socket.send(`PRIVMSG #${originChannel} :/me Usage: !crossban <user> <reason>`)
 						}
 					}
 					break;
@@ -150,13 +164,18 @@ socket.addEventListener('message', async event => {
 					}
 					break;
 				}
+				case "play":{
+					spotify.addSongToQueue(idsender, message, originChannelID);
+					break;
+				}
 				case "addtoownchannel":{
 					if (usernameSender) {
 						userId = await util.getUserIdByUserName(usernameSender).then(function(data) {return data;}).catch((error) => console.log(error));
 							var channel = {
 								"name": usernameSender,
 								"id": userId,
-								"crossban-enabled":true
+								"crossban":true,
+								"automod":true
 							}
 							console.log(`Username: ${usernameSender}, User ID: ${userId}`);
 							socket.send(`PRIVMSG #${usernameSender} :Hello there :D`);

@@ -58,7 +58,7 @@ exports.timeoutUser = async function timeoutUser (id, username, usernameSender, 
 	}
 }
 
-exports.crossban = async function crossban (UserID, username, idsender, originChannel){
+exports.crossban = async function crossban (UserID, username, idsender, originChannel, reason){
 	let data = await fs.readFile('../data/util.json', "binary");
 	const obj = JSON.parse(data);
 	let list = Array.from(obj["list"]);
@@ -66,7 +66,7 @@ exports.crossban = async function crossban (UserID, username, idsender, originCh
 	for (var channel of list){
 		console.log(channel.crossban);
 		if (channel.crossban){
-			await this.banUser(UserID, username,`Automated Crossban By YAUTB. Used in ${originChannel}`, idsender, channel.id);
+			await this.banUser(UserID, username,`Automated Crossban By YAUTB. Used in ${originChannel}. Reason: ${reason}`, idsender, channel.id);
 		}
 	}
 	console.log("CROSSBAN SUCESSFUL");
@@ -91,7 +91,7 @@ exports.filter = async function filter(message){
 	const obj = JSON.parse(data);
 	let list = Array.from(obj["blacklisted_terms"]);
 	for (var elem of list){
-		if (message == elem){
+		if (message.includes(elem)){
 			return true;
 		}
 	}
