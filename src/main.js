@@ -168,7 +168,7 @@ socket.addEventListener('message', async event => {
 					spotify.addSongToQueue(idsender, message, originChannelID);
 					break;
 				}
-				case "addtoownchannel":{
+				case "join":{
 					if (usernameSender) {
 						userId = await util.getUserIdByUserName(usernameSender).then(function(data) {return data;}).catch((error) => console.log(error));
 							var channel = {
