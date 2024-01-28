@@ -48,13 +48,13 @@ socket.addEventListener('message', async event => {
 		if (message != null && message.startsWith(Prefix)){
 			message = util.getMessageWithoutPrefix(message);
 			console.log(message);
+			let username = message.split(" ")[1];
+			username = username.replace("@", "");
 			if (message.startsWith("ban")){
-				let username = message.split(" ")[1];
 				let id = await util.getUserIdByUserName(username);
 				await modactions.banUser(id, username, `Automated Ban By YAUTB. Authorized by ${usernameSender}`, idsender, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));
 			}
 			if (message.startsWith("unban")){
-				let username = message.split(" ")[1];
 				let id = await util.getUserIdByUserName(username);
 				await modactions.unbanUser(id, idsender, originChannelID);
 			}
@@ -233,5 +233,3 @@ socket.addEventListener('close', event => {
 });
 
 //TODO Bot join and part methods, saving channel and connected spotify (?)
-
-//TODO store all data in a json, save in relation to channel
