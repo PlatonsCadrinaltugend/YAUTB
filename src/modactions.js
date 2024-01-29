@@ -1,10 +1,18 @@
 var whitelist = require('./whitelist.js');
-var util = require('./Util.js');
+var util = require('./util.js');
 
-exports.banUser = async function banUser (id, username, reason, idsender, originChannelID){
-	//TODO make sure the bot can ban users with @ prefix and moderators (optional)
-	let bool = await whitelist.userIDIsOnWhitelist(idsender, originChannelID);
-	if (bool){
+/**
+ * Function that requests the ban of a User per Twitch-Api.
+ * - id: ID of the user in question.
+ * - username: username of the User in question.
+ * - reason: reason for the ban.
+ * - userIDIsOnWhitelist: is the User that tries to ban whitelisted in this channel.
+ * - originChannelID: the ID of the Channel where the User should be banned.
+ * @typedef {{id: String, username: String, reason: String,
+ *            userIDIsOnWhitelist: boolean, originChannelID: String}}
+ */
+exports.banUser = async function banUser (id, username, reason, userIDIsOnWhitelist, originChannelID){
+		if (userIDIsOnWhitelist){
 		const response = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${originChannelID}&moderator_id=${util.BOTID}`, {
 			body: JSON.stringify({
 				"data": {
@@ -22,9 +30,8 @@ exports.banUser = async function banUser (id, username, reason, idsender, origin
 	}
 }
 
-exports.unbanUser = async function unbanUser (id, idsender, originChannelID){
-	let bool = await whitelist.userIDIsOnWhitelist(idsender, originChannelID);
-	if (bool){
+exports.unbanUser = async function unbanUser (id, userIDIsOnWhitelist, originChannelID){
+	if (userIDIsOnWhitelist){
 		const response = fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${originChannelID}&moderator_id=${util.BOTID}&user_id=${id}`, {
 			headers: {
 			Authorization: `Bearer ${oAuth}`,
@@ -36,10 +43,8 @@ exports.unbanUser = async function unbanUser (id, idsender, originChannelID){
 
 }
 
-exports.timeoutUser = async function timeoutUser (id, username, usernameSender, idsender, time, originChannelID){
-	//TODO make sure the bot can ban users with @ prefix and moderators (optional)
-	bool = await whitelist.userIDIsOnWhitelist(idsender, originChannelID);
-	if (bool){
+exports.timeoutUser = async function timeoutUser (id, username, usernameSender, userIDIsOnWhitelist, time, originChannelID){
+	if (userIDIsOnWhitelist){
 		const response = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${originChannelID}&moderator_id=${util.BOTID}`, {
 			body: JSON.stringify({
 				"data": {
@@ -58,9 +63,7 @@ exports.timeoutUser = async function timeoutUser (id, username, usernameSender, 
 	}
 }
 
-exports.crossban = async function crossban (UserID, username, idsender, originChannel, reason){
-	let data = await fs.readFile('../data/util.json', "binary");
-	const obj = JSON.parse(data);
+exports.crossban = async function crossban (UserID, username, idsender, originChannel, reason, obj){
 	let list = Array.from(obj["list"]);
 	console.log(list);
 	for (var channel of list){
@@ -72,9 +75,7 @@ exports.crossban = async function crossban (UserID, username, idsender, originCh
 	console.log("CROSSBAN SUCESSFUL");
 }
 
-exports.enableCrossban = async function enableCrossban(idsender, bool){
-	let data = await fs.readFile('../data/util.json', "binary");
-	const obj = JSON.parse(data);
+exports.enableCrossban = async function enableCrossban(idsender, bool, obj){
 	let list = Array.from(obj["list"]);
 	for (var channel of list){
 		if (channel.id == idsender){
@@ -83,12 +84,10 @@ exports.enableCrossban = async function enableCrossban(idsender, bool){
 	}
 	obj["list"] = list;
 	save(obj, '../data/util.json');
-
+	return obj;
 }
 
-exports.filter = async function filter(message){
-	let data = await fs.readFile('../data/util.json', "binary");
-	const obj = JSON.parse(data);
+exports.filter = async function filter(message, obj){
 	let list = Array.from(obj["blacklisted_terms"]);
 	for (var elem of list){
 		if (message.includes(elem)){

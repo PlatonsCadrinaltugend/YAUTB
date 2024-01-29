@@ -1,15 +1,32 @@
 require('dotenv').config({path : '../.env'});
 Object.assign(global, { WebSocket: require('ws') });
-var util = require('./Util.js');
+var util = require('./util.js');
 var whitelist = require('./whitelist.js');
 var spotify = require('./spotify.js');
 var modactions = require('./modactions.js');
 const oAuth = util.oAuth;
 var modify = true;
+const fs2= require('fs');
 const nick = `njdagdoiad`;
 const Messages = false;
 const socket = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
-
+let util_obj;
+let whitelist_obj;
+let standartargs;
+async function init(){
+	let util_data = await fs.readFile('../data/util.json', "binary");
+	util_obj = JSON.parse(util_data);
+	let whitelist_data = await fs.readFile('../data/whitelist.json', "binary");
+	whitelist_obj = JSON.parse(whitelist_data);
+	standartargs = {
+		modify:true,
+		Messages:false,
+		socket:socket,
+		util_obj:util_obj,
+		whitelist_obj: whitelist_obj
+	}
+}
+init()
 socket.addEventListener('open', async () => {
 	socket.send(`PASS oauth:${oAuth}`);
 	socket.send(`NICK ${nick}`);
@@ -33,170 +50,32 @@ socket.addEventListener('message', async event => {
 				originChannelID:  null,
 				message: util.getMessageContent(event),
 				idsender: null,
+				userIDIsOnWhitelist:false
 			}
 			MessageEvent.originChannelID =await util.getUserIdByUserName(MessageEvent.originChannel);
 			MessageEvent.idsender = await util.getUserIdByUserName(MessageEvent.usernameSender);
+			MessageEvent.userIDIsOnWhitelist = await whitelist.userIDIsOnWhitelist(MessageEvent.idsender, MessageEvent.originChannelID);
 			//lowers botspeed by alot, but thats a problem for another day
 			let [usernameSender,originChannel, originChannelID, message, idsender] = [MessageEvent.usernameSender, MessageEvent.originChannel,MessageEvent.originChannelID, MessageEvent.message, MessageEvent.idsender]; 
-			let botInChannel = await util.automodActivated(originChannel);
-			if (botInChannel){
-				let filtertrue =await modactions.filter(message);
-				if (filtertrue){
-					await modactions.banUser(idsender, usernameSender, `Automod detected blocked term`, util.BOTID, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));;
-				}
-			}
+//NOT WORKING IDK WHY BUT I AM TIRED WILL SOLVE TOMORROW OR THE DAY AFTER 			
+			// let botInChannel = await util.automodActivated(originChannel);
+			// if (botInChannel){
+			// 	let filtertrue =await modactions.filter(message, util_obj);
+			// 	if (filtertrue){
+			// 		await modactions.banUser(idsender, usernameSender, `Automod detected blocked term`, MessageEvent.userIDIsOnWhitelist, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));;
+			// 	}
+			// }
 		if (message != null && message.startsWith(Prefix)){
+			MessageEvent.message = message = util.getMessageWithoutPrefix(message);
+			let commandname = message.split(" ")[0];
+			console.log(commandname);
+			let path = `../commands/${commandname}.js`
+			if(fs2.existsSync(path)){
+				let command = require(path);
+				console.log(command);
+				standartargs = await command.execute.code(MessageEvent, standartargs);
+			}
 			message = util.getMessageWithoutPrefix(message);
-			console.log(message);
-			let username = message.split(" ")[1];
-			username = username.replace("@", "");
-			if (message.startsWith("ban")){
-				let id = await util.getUserIdByUserName(username);
-				await modactions.banUser(id, username, `Automated Ban By YAUTB. Authorized by ${usernameSender}`, idsender, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));
-			}
-			if (message.startsWith("unban")){
-				let id = await util.getUserIdByUserName(username);
-				await modactions.unbanUser(id, idsender, originChannelID);
-			}
-			if (message.startsWith("timeout")){
-				let time = message.split(" ")[2];
-				let id = await util.getUserIdByUserName(username);
-				await modactions.timeoutUser(id, username, usernameSender, idsender, time, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));
-			}
-			switch(message.split(" ")[0].toLowerCase()){
-				case "skip":{
-					if (modify){
-						spotify.skipSong(socket, originChannel, idsender, originChannelID);
-					}
-					break;
-				}
-				case "song":{
-					if (modify){
-						spotify.getCurrentSong(socket, originChannel);
-					}
-					break;
-				}
-				case "volume":{
-					if (modify){
-						if (message.split(" ").length == 2){
-							spotify.setVolume(message.split(" ")[1], socket, originChannel, idsender);
-						}
-						else{
-							spotify.getVolume(socket, originChannel, idsender);
-						}
-					}
-					break;
-
-				}
-				case "deactivate":
-				case "activate":{
-					//TODO fix codequality
-					if (usernameSender == originChannel){
-						modify = !modify;
-						socket.send(`PRIVMSG #${originChannel} :/me Set Modify-Musik to ${modify}`)
-					}
-					break;
-				}
-				case "v":{
-					await modactions.timeoutUser(idsender, username, "YAUTB", util.BOTID, 1);
-					break;
-				}
-				case "crossban":{
-					if (usernameSender == "deadcr1"){
-						if (message.split(" ").length >= 2){
-							let username = message.split(" ")[1];
-							let message2 = message.split(" ");
-							message2.shift();
-							message2.shift();
-							console.log(message2);
-							let reason = message2.join(" ");
-							console.log(reason);
-							let id = await util.getUserIdByUserName(username);
-							await modactions.crossban(id, username, idsender, originChannel, reason);
-						}
-						else{
-							socket.send(`PRIVMSG #${originChannel} :/me Usage: !crossban <user> <reason>`)
-						}
-					}
-					break;
-				}
-				case "enableautomod":
-					await util.setAutomod(idsender, true);
-					socket.send(`PRIVMSG #${originChannel} :/me Enabled automod for your channel ApuApproved`)
-					break;
-				case "disableautomod":
-					await util.setAutomod(idsender, false);
-					socket.send(`PRIVMSG #${originChannel} :/me Disabled automod for your channel ApuApproved`)
-					break;
-				case "enablecrossban":
-					await modactions.enableCrossban(idsender, true);
-					socket.send(`PRIVMSG #${originChannel} :/me Enabled crossbans for your channel ApuApproved`)
-					break;
-				case "disablecrossban":{
-					await modactions.enableCrossban(idsender, false);
-					socket.send(`PRIVMSG #${originChannel} :/me Disabled crossbans for your channel ApuApproved`)
-					break;
-				}
-				case "idea":{
-					let list = message.split(" ");
-					list.splice(0,1);
-					list = list.join(" ");
-					if (list && list != null){
-						util.saveIdea(list);
-						socket.send(`PRIVMSG #${originChannel} :Saving your idea. Thank you for your help improving this bot luvv`);
-					}else{
-						socket.send(`PRIVMSG #${originChannel} :/me Usage: !idea <idea>`);
-					}
-					break;
-				}
-				case "shutdown":{
-					if (usernameSender == "deadcr1" && originChannel == "yautb"){
-						let channels = await (util.getChannelNamesOfJoinedChannels()).then(function(data) {return data;}).catch((error) => console.log(error));
-						for (var channel of channels) {
-							if (Messages){
-								socket.send(`PRIVMSG #${channel} :Deadge`);
-							}
-						}
-						socket.close();
-					}
-					else{
-						socket.send(`PRIVMSG #${originChannel} :An Error occured, either you have insufficient privileges or this is not the right channel.`)
-					}
-					break;
-				}
-				case "play":{
-					spotify.addSongToQueue(idsender, message, originChannelID);
-					break;
-				}
-				case "join":{
-					if (usernameSender) {
-						userId = await util.getUserIdByUserName(usernameSender).then(function(data) {return data;}).catch((error) => console.log(error));
-							var channel = {
-								"name": usernameSender,
-								"id": userId,
-								"crossban":true,
-								"automod":true
-							}
-							console.log(`Username: ${usernameSender}, User ID: ${userId}`);
-							socket.send(`PRIVMSG #${usernameSender} :Hello there :D`);
-							socket.send(`PRIVMSG #${originChannel} :I sucessfully joined your Channel ApuApproved`);
-							util.saveChannel(channel, '../data/util.json');
-							socket.send(`JOIN #${usernameSender}`);
-							console.log(`Joined ${usernameSender}`);
-						}
-						break;
-					}
-				default: {
-					break;
-				} 
-			}
-		}
-		switch(message){
-			case "kok": {
-				socket.send(`PRIVMSG #${originChannel} :kok`);
-				break;
-			}
-			default: break;
 		}
 		if (message != null && (usernameSender == originChannel || usernameSender =="deadcr1")){
 			if (message.startsWith("kok whitelist")){
@@ -212,10 +91,6 @@ socket.addEventListener('message', async event => {
 						whitelist.saveWhitelist(userId, originChannel, username, remove, socket, originChannelID);
 					}
 			}
-		}
-		if (message != null && message.startsWith("kok play ")){
-			let userID = await util.getUserIdByUserName(usernameSender).then(function(data) {return data;}).catch((error) => console.log(error));
-			spotify.addSongToQueue(userID, message);
 		}
 	}
 	// Respond to PING requests

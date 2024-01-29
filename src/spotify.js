@@ -6,12 +6,11 @@ var whitelist = require('./whitelist.js');
 const { stringify } = require('querystring');
 const { parse, formatURI, formatOpenURL } = require('spotify-uri');
 //TODO handle wrong inputs
-exports.addSongToQueue = async function addSongToQueue (userID, message, originChannelID) {
-	let bool = await whitelist.userIDIsOnWhitelist(userID, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));
-    console.log(bool);
-	if (bool){
+//TODO handle right inputs the correct way
+exports.addSongToQueue = async function addSongToQueue (message, userIDIsOnWhitelist) {
+	if (userIDIsOnWhitelist){
 		message = message.split(" ")[1];
-        if (message.startsWith("http://open.spotify.com/track/") && message.length == 52){
+        if ((message.startsWith("http://open.spotify.com/track/") && message.length == 52) ||message.startsWith("https://open.spotify.com/intl-de/track/")){
             await refreshToken();
             var uri = parse(message)["uri"];
             uri.split("?")[0];
@@ -70,9 +69,8 @@ exports.skipSong = async function skipSong(socket, originChannel, userID, origin
     }
 }
 
-exports.setVolume = async function setVolume(volume, socket, originChannel, idsender){
-    let bool = await whitelist.userIDIsOnWhitelist(idsender).then(function(data) {return data;}).catch((error) => console.log(error));
-	if (bool){
+exports.setVolume = async function setVolume(volume, socket, originChannel, userIDIsOnWhitelist){
+    if (userIDIsOnWhitelist){
         await refreshToken();
         fetch(`https://api.spotify.com/v1/me/player/volume?volume_percent=${volume}`, {
         headers: {
@@ -83,9 +81,8 @@ exports.setVolume = async function setVolume(volume, socket, originChannel, idse
     }
 }
 
-exports.getVolume = async function getVolume(socket, originChannel, idsender){
-    let bool = await whitelist.userIDIsOnWhitelist(idsender).then(function(data) {return data;}).catch((error) => console.log(error));
-	if (bool){
+exports.getVolume = async function getVolume(socket, originChannel, userIDIsOnWhitelist){
+	if (userIDIsOnWhitelist){
         await refreshToken();
     fetch("https://api.spotify.com/v1/me/player", {
     headers: {

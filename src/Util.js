@@ -77,13 +77,12 @@ exports.getMessageWithoutPrefix = getMessageWithoutPrefix = (message) =>{
 	}
 }
 
-exports.saveChannel = async function saveChannel (channel, file) {
-	let data = await FileSystem.promises.readFile('../data/util.json', "binary");
-	const obj = JSON.parse(data);
+exports.saveChannel = async function saveChannel (channel, file, obj) {
 	let list = Array.from(obj['list']);
 	list.push(channel);
 	obj["list"] = list;
 	save(obj, file);
+	return obj;
 } 
 
 exports.getChannelNamesOfJoinedChannels = async function getChannelNamesOfJoinedChannels (){
@@ -106,14 +105,12 @@ exports.getChannelNamesOfJoinedChannels = async function getChannelNamesOfJoined
 	return IDlist;
 }
 
-exports.saveIdea = async function saveIdea(idea){
-	let file = '../data/util.json';
-	let data = await FileSystem.promises.readFile(file, "binary");
-	const obj = JSON.parse(data);
+exports.saveIdea = async function saveIdea(idea, obj){
 	let list = Array.from(obj['idea']);
 	list.push(idea);
 	obj["idea"] = list;
-	save(obj, file);
+	save(obj, '../data/util.json');
+	return obj;
 }
 
 exports.automodActivated = async function automodActivated(originChannel){
@@ -128,10 +125,7 @@ exports.automodActivated = async function automodActivated(originChannel){
 	return false;
 }
 
-exports.setAutomod = async function setAutomod(channelID, bool){
-	let file = '../data/util.json';
-	let data = await FileSystem.promises.readFile(file, "binary");
-	const obj = JSON.parse(data);
+exports.setAutomod = async function setAutomod(channelID, bool, obj){
 	let list = Array.from(obj['list']);
 	for (var elem of list){
 		if (elem.id == channelID){
@@ -139,6 +133,7 @@ exports.setAutomod = async function setAutomod(channelID, bool){
 		}
 	}
 	obj['list'] = list;
-	save(obj, file);
+	save(obj, '../data/util.json');
+	return obj;
 }
 //TODO sendmsg function to remove duplicate lines

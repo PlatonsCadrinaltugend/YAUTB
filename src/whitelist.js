@@ -1,9 +1,7 @@
-const { channel } = require('diagnostics_channel');
-var util = require('./Util.js');
-const FileSystem = util.FileSystem;
+const FileSystem = require('fs');
 exports.fs = fs = require('fs').promises;
 
-exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove, socket, channelid) =>{
+exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove, socket, channelid, user) =>{
 	FileSystem.readFile('../data/Whitelist.json', (error, data) => {
 		// if the reading process failed,
 		// throwing the error
@@ -15,7 +13,6 @@ exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove
 		let list = [];
 		// parsing the JSON object
 		// to convert it to a JavaScript object
-		const user = JSON.parse(data);
 		if (user.hasOwnProperty(channelid)){
 			list = Array.from(user[channelid]);
 		}
@@ -35,6 +32,7 @@ exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove
 		}
 		user[channelid] = list;
 		save(user, '../data/Whitelist.json');
+		return user;
 	  });
 }
 
