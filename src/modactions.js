@@ -1,4 +1,4 @@
-const util = require('./Util.js');
+const util = require('./util.js');
 
 /**
  * Function that requests the ban of a User per Twitch-Api.

@@ -1,7 +1,7 @@
 require('dotenv').config({path : '../.env'});
 Object.assign(global, { WebSocket: require('ws') });
 const whitelist = require('./whitelist.js');
-const util = require('./Util.js');
+const util = require('./util.js');
 const modactions = require('./modactions.js');
 
 const oAuth = util.oAuth;
