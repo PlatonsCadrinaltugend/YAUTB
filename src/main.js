@@ -1,23 +1,18 @@
 require('dotenv').config({path : '../.env'});
 Object.assign(global, { WebSocket: require('ws') });
-var util = require('./util.js');
-var whitelist = require('./whitelist.js');
-var spotify = require('./spotify.js');
-var modactions = require('./modactions.js');
+const whitelist = require('./whitelist.js');
+const util = require('./Util.js');
+const modactions = require('./modactions.js');
+
 const oAuth = util.oAuth;
-var modify = true;
 const fs2= require('fs');
 const nick = `njdagdoiad`;
-const Messages = false;
 const socket = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
-let util_obj;
-let whitelist_obj;
-let standartargs;
 async function init(){
 	let util_data = await fs.readFile('../data/util.json', "binary");
-	util_obj = JSON.parse(util_data);
+	let util_obj = JSON.parse(util_data);
 	let whitelist_data = await fs.readFile('../data/whitelist.json', "binary");
-	whitelist_obj = JSON.parse(whitelist_data);
+	let whitelist_obj = JSON.parse(whitelist_data);
 	standartargs = {
 		modify:true,
 		Messages:false,
@@ -57,14 +52,13 @@ socket.addEventListener('message', async event => {
 			MessageEvent.userIDIsOnWhitelist = await whitelist.userIDIsOnWhitelist(MessageEvent.idsender, MessageEvent.originChannelID);
 			//lowers botspeed by alot, but thats a problem for another day
 			let [usernameSender,originChannel, originChannelID, message, idsender] = [MessageEvent.usernameSender, MessageEvent.originChannel,MessageEvent.originChannelID, MessageEvent.message, MessageEvent.idsender]; 
-//NOT WORKING IDK WHY BUT I AM TIRED WILL SOLVE TOMORROW OR THE DAY AFTER 			
-			// let botInChannel = await util.automodActivated(originChannel);
-			// if (botInChannel){
-			// 	let filtertrue =await modactions.filter(message, util_obj);
-			// 	if (filtertrue){
-			// 		await modactions.banUser(idsender, usernameSender, `Automod detected blocked term`, MessageEvent.userIDIsOnWhitelist, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));;
-			// 	}
-			// }
+			let botInChannel = await util.automodActivated(originChannel);
+			if (botInChannel){
+				let filtertrue =await modactions.filter(message, util_obj);
+				if (filtertrue){
+					await modactions.banUser(idsender, usernameSender, `Automod detected blocked term`, MessageEvent.userIDIsOnWhitelist, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));;
+				}
+			}
 		if (message != null && message.startsWith(Prefix)){
 			MessageEvent.message = message = util.getMessageWithoutPrefix(message);
 			let commandname = message.split(" ")[0];
@@ -107,4 +101,4 @@ socket.addEventListener('close', event => {
 	console.log('WebSocket closed:', event);
 });
 
-//TODO Bot join and part methods, saving channel and connected spotify (?)
+//TODO Bot part methods and connected spotify (?)

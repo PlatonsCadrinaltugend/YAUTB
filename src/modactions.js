@@ -1,5 +1,4 @@
-var whitelist = require('./whitelist.js');
-var util = require('./util.js');
+const util = require('./Util.js');
 
 /**
  * Function that requests the ban of a User per Twitch-Api.

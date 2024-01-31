@@ -1,7 +1,6 @@
 exports.CLIENT_ID = CLIENT_ID = process.env.CLIENTID;
 exports.oAuth = oAuth = process.env.TWITCHTOKEN;
 const axios = require('axios');
-const { enableCrossban } = require('./modactions');
 exports.FileSystem = FileSystem = require('fs');
 exports.Prefix = Prefix = "!";
 exports.BOTID = BOTID = "1013898275";
