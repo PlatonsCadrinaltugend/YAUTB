@@ -5,6 +5,7 @@ exports.execute = {
         const modactions = require('../src/modactions.js');
 
         let username = args.message.split(" ")[1];
+        username = username.replace("@", "");
         let time = args.message.split(" ")[2];
         let id = await util.getUserIdByUserName(username);
         await modactions.timeoutUser(id, username, args.usernameSender, args.userIDIsOnWhitelist, time, args.originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));
