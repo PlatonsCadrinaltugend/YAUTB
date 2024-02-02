@@ -2,14 +2,6 @@ const FileSystem = require('fs');
 exports.fs = fs = require('fs').promises;
 
 exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove, socket, channelid, user) =>{
-	FileSystem.readFile('../data/Whitelist.json', (error, data) => {
-		// if the reading process failed,
-		// throwing the error
-		if (error) {
-		  // logging the error
-		  console.error(error);
-		  throw err;
-		}
 		let list = [];
 		// parsing the JSON object
 		// to convert it to a JavaScript object
@@ -33,8 +25,7 @@ exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove
 		user[channelid] = list;
 		save(user, '../data/Whitelist.json');
 		return user;
-	  });
-}
+	  }
 
 exports.userIDIsOnWhitelist = async function userIDIsOnWhitelist (id, channelid) {
 	let data = await fs.readFile('../data/Whitelist.json', "binary");

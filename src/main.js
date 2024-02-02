@@ -30,7 +30,7 @@ socket.addEventListener('open', async () => {
 	for (var channel of channels) {
 		socket.send(`JOIN #${channel}`);
 		console.log(`Joined ${channel}`);
-		if (Messages){
+		if (standartargs.Messages){
 			socket.send(`PRIVMSG #${channel} :kok`);
 		}
 	}
@@ -54,7 +54,7 @@ socket.addEventListener('message', async event => {
 			let [usernameSender,originChannel, originChannelID, message, idsender] = [MessageEvent.usernameSender, MessageEvent.originChannel,MessageEvent.originChannelID, MessageEvent.message, MessageEvent.idsender]; 
 			let botInChannel = await util.automodActivated(originChannel);
 			if (botInChannel){
-				let filtertrue =await modactions.filter(message, util_obj);
+				let filtertrue =await modactions.filter(MessageEvent.message, standartargs.util_obj);
 				if (filtertrue){
 					await modactions.banUser(idsender, usernameSender, `Automod detected blocked term`, MessageEvent.userIDIsOnWhitelist, originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));;
 				}
