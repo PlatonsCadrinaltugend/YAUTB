@@ -71,21 +71,6 @@ socket.addEventListener('message', async event => {
 			}
 			message = util.getMessageWithoutPrefix(message);
 		}
-		if (message != null && (usernameSender == originChannel || usernameSender =="deadcr1")){
-			if (message.startsWith("kok whitelist")){
-				var remove = false;
-				if (message.startsWith("kok whitelist remove")){
-					remove = true;
-					var username = message.split("kok whitelist remove ")[1];
-				}else{
-					var username = message.split("kok whitelist ")[1];
-				}
-					if (username) {
-						let userId = await util.getUserIdByUserName(username).then(function(data) {return data;}).catch((error) => console.log(error));
-						whitelist.saveWhitelist(userId, originChannel, username, remove, socket, originChannelID);
-					}
-			}
-		}
 	}
 	// Respond to PING requests
 	if (event.data.includes("PING")) {
