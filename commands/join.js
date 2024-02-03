@@ -4,6 +4,12 @@ exports.execute = {
         const util = require('../src/util.js');
 
         if (args.usernameSender) {
+            for (elem of standartargs.util_obj['list']){
+                if (elem['id'] == args.idsender){
+                    standartargs.socket.send(`PRIVMSG #${args.originChannel} :I already joined your Channel UNLUCKY`)
+                    return standartargs;
+                }
+            }
             userId = await util.getUserIdByUserName(args.usernameSender).then(function(data) {return data;}).catch((error) => console.log(error));
                 var channel = {
                     "name": args.usernameSender,
