@@ -9,7 +9,7 @@ exports.execute = {
             standartargs.util_obj = util.saveIdea(list, standartargs.util_obj);
             standartargs.socket.send(`PRIVMSG #${args.originChannel} :Saving your idea. Thank you for your help improving this bot luvv`);
         }else{
-            socket.send(`PRIVMSG #${args.originChannel} :/me Usage: !idea <idea>`);
+            standartargs.socket.send(`PRIVMSG #${args.originChannel} :/me Usage: !idea <idea>`);
         }
         return standartargs;
     })
