@@ -5,9 +5,11 @@ exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove
 		let list = [];
 		// parsing the JSON object
 		// to convert it to a JavaScript object
-		if (user.hasOwnProperty(channelid)){
-			list = Array.from(user[channelid]);
-		}
+		if (user){
+			if (user.hasOwnProperty(channelid)){
+				list = Array.from(user[channelid]);
+			}
+
 		if(!list.includes(userID) && remove == false){
 			list.push(`${userID}`);
 			socket.send(`PRIVMSG #${originChannel} :${username} has been whitelisted HYPERS`);
@@ -26,6 +28,7 @@ exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove
 		save(user, '../data/Whitelist.json');
 		return user;
 	  }
+	}
 
 exports.userIDIsOnWhitelist = async function userIDIsOnWhitelist (id, channelid) {
 	let data = await fs.readFile('../data/Whitelist.json', "binary");
