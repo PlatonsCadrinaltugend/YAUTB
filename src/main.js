@@ -14,7 +14,7 @@ async function init(){
 	let whitelist_data = await fs.readFile('../data/whitelist.json', "binary");
 	let whitelist_obj = JSON.parse(whitelist_data);
 	standartargs = {
-		modify:true,
+		modify:false,
 		Messages:false,
 		socket:socket,
 		util_obj:util_obj,

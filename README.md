@@ -1,6 +1,6 @@
 # YAUTB
 ## A multifunctional Twitch-Chatbot using Javascript
-Feel free to add this Bot to your own Channel by typing !join in its [Twitch Channel](https://www.twitch.tv/yautb). <br> If you have any Suggestions to improve this bot, you can use the !idea command. <3 <br>
+Feel free to add this Bot to your own Channel by typing !join in its [Twitch Channel](https://www.twitch.tv/yautb). <br> If you have any Suggestions to improve this bot, you can use the !suggest command. <3 <br>
 
 ### Currently available Features (28.01.2024)
 * Controll the hosters music (add Songs to the Queue, skip songs, controll volume) for whitelisted users
