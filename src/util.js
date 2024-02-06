@@ -105,9 +105,14 @@ exports.getChannelNamesOfJoinedChannels = async function getChannelNamesOfJoined
 }
 
 exports.saveIdea = async function saveIdea(idea, obj){
-	let list = Array.from(obj['idea']);
+	let obje = obj['idea'];
+	if (obje == null){
+		console.log("NULL-ERROR");
+		return null;
+	}
+	let list = Array.from(obje);
 	list.push(idea);
-	obj["idea"] = list;
+	obj['idea'] = list;
 	save(obj, '../data/util.json');
 	return obj;
 }

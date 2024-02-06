@@ -3,7 +3,7 @@ Object.assign(global, { WebSocket: require('ws') });
 const whitelist = require('./whitelist.js');
 const util = require('./util.js');
 const modactions = require('./modactions.js');
-
+let standartargs;
 const oAuth = util.oAuth;
 const fs2= require('fs');
 const nick = `njdagdoiad`;
@@ -68,6 +68,8 @@ socket.addEventListener('message', async event => {
 				let command = require(path);
 				console.log(command);
 				standartargs = await command.execute.code(MessageEvent, standartargs);
+				standartargs.util_obj = await (standartargs.util_obj).then(function(data) {return data;}).catch((error) => console.log(error));;
+				console.log(standartargs);
 			}
 			message = util.getMessageWithoutPrefix(message);
 		}

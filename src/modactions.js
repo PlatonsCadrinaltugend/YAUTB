@@ -88,12 +88,19 @@ exports.enableCrossban = async function enableCrossban(idsender, bool, obj){
 
 exports.filter = async function filter(message, obj){
 	if (obj){
-		let list = Array.from(obj["blacklisted_terms"]);
-		for (var elem of list){
-			if (message.includes(elem)){
-				return true;
+		let obje = obj['blacklisted_terms'];
+		if (obje != null){
+			let list = Array.from(obje);
+			for (var elem of list){
+				if (message.includes(elem)){
+					return true;
+				}
 			}
 		}
+		else{
+			console.log("NULLERROR");
+		}
+
 	}
 
 	return false;
