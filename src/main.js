@@ -9,7 +9,7 @@ const fs2= require('fs');
 const nick = `njdagdoiad`;
 const socket = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
 async function init(){
-	let util_data = await fs.readFile('../data/util.json', "binary");
+	let util_data = await fs.readFile('../data/util.json', "utf8");
 	let util_obj = JSON.parse(util_data);
 	let whitelist_data = await fs.readFile('../data/whitelist.json', "binary");
 	let whitelist_obj = JSON.parse(whitelist_data);
@@ -68,7 +68,7 @@ socket.addEventListener('message', async event => {
 				let command = require(path);
 				console.log(command);
 				standartargs = await command.execute.code(MessageEvent, standartargs);
-				standartargs.util_obj = await (standartargs.util_obj).then(function(data) {return data;}).catch((error) => console.log(error));;
+					standartargs.util_obj = await Promise.resolve(standartargs.util_obj).then(function(data) {return data;}).catch((error) => console.log(error));;
 				console.log(standartargs);
 			}
 			message = util.getMessageWithoutPrefix(message);
