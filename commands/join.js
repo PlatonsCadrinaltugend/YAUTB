@@ -15,7 +15,8 @@ exports.execute = {
                     "name": args.usernameSender,
                     "id": userId,
                     "crossban":true,
-                    "automod":true
+                    "automod":true,
+                    "bible":[]
                 }
                 console.log(`Username: ${args.usernameSender}, User ID: ${userId}`);
                 standartargs.socket.send(`PRIVMSG #${args.usernameSender} :Hello there :D`);
