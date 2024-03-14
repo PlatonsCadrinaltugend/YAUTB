@@ -29,6 +29,8 @@ exports.execute = {
                     console.log(list);
                     elem.bible = list;
                     util.save(standartargs.util_obj, '../data/util.json');
+                    standartargs.socket.send(`PRIVMSG #${args.originChannel} :Success happi`)
+
                 }
             }
             }
