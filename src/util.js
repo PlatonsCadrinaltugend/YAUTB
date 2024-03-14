@@ -141,3 +141,36 @@ exports.setAutomod = async function setAutomod(channelID, bool, obj){
 	return obj;
 }
 //TODO sendmsg function to remove duplicate lines
+
+exports.followage = async function followage(data, args, standartargs, channel, user){
+	data = await Promise.resolve(data).then(function(data) {return data;}).catch((error) => console.log(error));
+	console.log(data);
+	console.log(data['followedAt']);
+	if (data['followedAt'] == null){
+		standartargs.socket.send(`PRIVMSG #${args.originChannel} :${user} is not following ${channel}.`)
+	}
+	else{
+		standartargs.socket.send(`PRIVMSG #${args.originChannel} :${user} has been following ${channel} since ${data['followedAt']}.`);
+	}
+}
+
+exports.getUsernameAndChannel = function getUsernameAndChannel(args){
+	let mes = args.message.split(" ");
+	// mes.length == 0 does not have to be covered, because the function would never be called
+	if (mes.length == 1){
+		user = args.usernameSender;
+		channel = args.originChannel;
+	}
+	else if(mes.length == 2){
+		user = mes[1];
+		channel = args.originChannel;
+	}
+	else{
+		user = mes[1];
+		channel = mes[2];
+	}
+	return {
+        user: user,
+        channel: channel,
+    }
+}
