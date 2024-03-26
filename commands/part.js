@@ -1,5 +1,8 @@
 exports.execute = {
     name:"part",
+    description:"Removes this Bot from your channel.",
+    usage:"part",
+    Roles: ROLES.USER,
     code:(async function part(args, standartargs){
         const util = require('../src/util.js');
         if (args.usernameSender) {
@@ -10,7 +13,7 @@ exports.execute = {
                 }
             }
             standartargs.util_obj['list'] = list;
-            standartargs.socket.send(`PRIVMSG #${args.usernameSender} :Goodbye :(`);
+            util.send(args.messages, args.usernameSender, standartargs.socket, 'Goodbye :(');
             util.save(standartargs.util_obj, '../data/util.json');
             standartargs.socket.send(`PART #${args.usernameSender}`);
         }

@@ -1,5 +1,8 @@
 exports.execute = {
     name:"bible",
+    description:"A Collection of funny, stupid or totally out of context messages. If you add a quote to your message, you can add it to the library.",
+    usage:"bible <optional:message>",
+    Roles: ROLES.USER,
     code:(async function bible(args, standartargs){
         const util = require('../src/util.js');
         if (args.message.split(" ").length <=1){
@@ -8,9 +11,9 @@ exports.execute = {
                     let list = Array.from(elem.bible);
                     let quote = list[Math.floor(Math.random()*list.length)];
                     if (quote == undefined){
-                        standartargs.socket.send(`PRIVMSG #${args.originChannel} :Bible is empty`)
+                        util.send(args, standartargs,'Bible is empty');
                     }else{
-                        standartargs.socket.send(`PRIVMSG #${args.originChannel} :${quote}`)
+                        util.send(args, standartargs, quote);
                     }
                 }
             }
@@ -22,14 +25,14 @@ exports.execute = {
             mes.splice(mes.length-1,mes.length);
             let quote = mes.join(" ");
             for (var elem of standartargs.util_obj.list){
-                if (elem.id == args.originChannelID && args.userIDIsOnWhitelist){
+                if (elem.id == args.originChannelID && args.userAccess){
                     let list = Array.from(elem.bible);
                     console.log(list);
                     list.push(quote + " ~ " + username);
                     console.log(list);
                     elem.bible = list;
                     util.save(standartargs.util_obj, '../data/util.json');
-                    standartargs.socket.send(`PRIVMSG #${args.originChannel} :Success happi`)
+                    util.send(args, standartargs,'Success happi');
 
                 }
             }

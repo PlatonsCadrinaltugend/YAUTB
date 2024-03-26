@@ -1,5 +1,8 @@
 exports.execute = {
     name:"crossban",
+    description:"Advanced ban command to ban users from multiple channels at once. Restricted to Admins.",
+    usage:"crossban <username>",
+    Roles: ROLES.ADMIN,
     code:(async function crossban(args, standartargs){
         const util = require('../src/util.js');
         const modactions = require('../src/modactions.js');
@@ -11,10 +14,10 @@ exports.execute = {
                 message2.shift();
                 let reason = message2.join(" ");
                 let id = await util.getUserIdByUserName(username);
-                await modactions.crossban(id, username, args.idsender, args.originChannel, reason, standartargs.whitelist_obj);
+                await modactions.crossban(id, username, args.idsender, args.originChannel, reason, standartargs.util_obj);
             }
             else{
-                standartargs.socket.send(`PRIVMSG #${args.originChannel} :/me Usage: !crossban <user> <reason>`)
+                util.send(args, standartargs,'/me Usage: !crossban <user> <reason>');
             }
         }
         return standartargs;

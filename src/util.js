@@ -2,7 +2,7 @@ exports.CLIENT_ID = CLIENT_ID = process.env.CLIENTID;
 exports.oAuth = oAuth = process.env.TWITCHTOKEN;
 const axios = require('axios');
 exports.FileSystem = FileSystem = require('fs');
-exports.Prefix = Prefix = "!";
+exports.Prefix = Prefix = "Y!";
 exports.BOTID = BOTID = "1013898275";
 
 
@@ -68,6 +68,14 @@ exports.save = save = (data, file) =>{
 	}
 	const jsonData = JSON.stringify(data,null, 2)
 	FileSystem.writeFile(file, jsonData, finished)
+}
+exports.getMessages = function getMessages(args, standartargs){
+	for (var elem of standartargs.util_obj.list){
+		if (elem.id == args.originChannelID){
+			return elem.messages;
+		}
+	}
+	return false;
 }
 
 exports.getMessageWithoutPrefix = getMessageWithoutPrefix = (message) =>{
@@ -150,7 +158,15 @@ exports.followage = async function followage(data, args, standartargs, channel, 
 		standartargs.socket.send(`PRIVMSG #${args.originChannel} :${user} is not following ${channel}.`)
 	}
 	else{
-		standartargs.socket.send(`PRIVMSG #${args.originChannel} :${user} has been following ${channel} since ${data['followedAt']}.`);
+		let [date, time] = this.convertTime(data['followedAt']);
+		let t = "am";
+		if (time.split(":")[0]>12){
+			time = time.split(":");
+			time[0] = time[0]-12;
+			t = "pm";
+			time = time.join(":");
+		}
+		standartargs.socket.send(`PRIVMSG #${args.originChannel} :${user} started following ${channel} on ${date} at ${time} ${t}.`);
 	}
 }
 
@@ -173,4 +189,149 @@ exports.getUsernameAndChannel = function getUsernameAndChannel(args){
         user: user,
         channel: channel,
     }
+}
+
+exports.convertTime = function convertTime(time){
+	let date = time.split("T")[0];
+	time = time.split("T")[1];
+	time = time.split("Z")[0];
+	let dat = date.split("-").reverse().join(".");
+	return [dat, time];
+}
+let mlenum = {
+	AFFILIATE:1<<0,
+	PARTNER:1<<1,
+	STAFF:1<<2
+}
+exports.convertMlData = async function convertMlData(dat, args, standartargs){
+	let datar = await Promise.resolve(dat).then(function(data) {return data;}).catch((error) => console.log(error));
+	console.log(datar);
+	console.log(datar);
+	let [total, affiliate, partnered, allfollower] = [0,0,0,0];
+	let user = datar.displayName;
+	for (var elem of datar.moderating){
+		total+=1;
+		if (flags(mlenum.AFFILIATE, elem.flags)){
+			affiliate+=1;
+		}
+		if (flags(mlenum.PARTNER, elem.flags)){
+			partnered+=1;
+		}
+		allfollower+=elem.followers;
+	}
+	standartargs.socket.send(`PRIVMSG #${args.originChannel} :${user} is mod in ${total} channels (Affiliate: ${affiliate}; Partnered: ${partnered}; Allfollower: ${allfollower}) https://mod.sc/${user}`)
+}
+
+function flags(flag, flags){
+	return (flags & flag) === flag;
+}
+
+exports.notifyChannels = function notifyChannels(standartargs, id, user){
+	let channels = standartargs.util_obj.subscribed[id];
+	console.log(standartargs.util_obj.subscribed);
+	console.log(channels);
+	for (var elem of channels){
+		standartargs.socket.send(`PRIVMSG #${elem} :${user} just went live DinkDonk`);
+	}
+}
+
+exports.joinlivemsg = async function joinlivemsg(standartargs, id){
+	await fetch("https://api.twitch.tv/helix/eventsub/subscriptions", {
+		body: JSON.stringify({"type": "stream.online","version": "1","condition": {"broadcaster_user_id": `${id}`},"transport": {"method": "websocket", "session_id": standartargs.eventid}}),
+		headers: {
+		  "Authorization": `Bearer ${oAuth}`,
+		  "Client-Id": CLIENT_ID,
+		  "Content-Type": "application/json"
+		},
+		method: "POST"
+		}
+		).then(data => data).catch(error => console.log(error));
+}
+
+exports.convertVlData = async function convertVlData(dat, args, standartargs){
+	let datar = await Promise.resolve(dat).then(function(data) {return data;}).catch((error) => console.log(error));
+	let [total, list] = [0, []];
+	let user = datar.displayName;
+	for (var elem of datar.viping){
+		total+=1;
+		list.push(elem.displayName);
+	}
+	let string = "";
+	for (var elem of list){
+		if (string == ""){
+			string += elem;
+		}else{
+			string += ", " + elem;
+		}
+	}
+	standartargs.socket.send(`PRIVMSG #${args.originChannel} :${user} is VIP in ${total} channels: (${string}) https://mod.sc/${user}`)
+}
+
+exports.convertFlData = async function convertFlData(dat, args, standartargs){
+	let datar = await Promise.resolve(dat).then(function(data) {return data;}).catch((error) => console.log(error));
+	let [total, list] = [0, []];
+	let user = datar.displayName;
+	for (var elem of datar.founding){
+		total+=1;
+		list.push(elem.displayName);
+	}
+	let string = "";
+	for (var elem of list){
+		if (string == ""){
+			string += elem;
+		}else{
+			string += ", " + elem;
+		}
+	}
+	standartargs.socket.send(`PRIVMSG #${args.originChannel} :${user} is Founder in ${total} channels: (${string}) https://mod.sc/${user}`)
+}
+
+exports.getUsername = function getUsername(args){
+	if (args.message.split(" ").length > 1){
+		return args.message.split(" ")[1];
+	}
+	return args.usernameSender;
+}
+
+exports.getEmotename = function getEmotename(args){
+	if (args.message.split(" ").length > 1){
+		let list = [];
+		let mes = args.message.split(" ");
+		for (var x = 1;x<mes.length; x++){
+			list.push(mes[x]);
+		}
+		return list;
+	}
+	return null;
+}
+
+/**
+ * Sends a message to the given Socket, returning true on success
+ * - args: Struct containing eventinformation
+ * - standartargs: Struct containing Botconfig
+ * - message: Message to be sent
+ * - OR
+ * - args: Sending messages allowed in this Channel?
+ * - standartargs: Channel where to send messages
+ * - message: socket on which to send the message
+ * - text: message
+ * @typedef {{args:Boolean, standartargs:String, message:Websocket, text:String}}
+ * @typedef {{args: Struct, standartargs: Structs, message: String}}
+ */
+exports.send = function send(args, standartargs, message, text){
+	if(typeof message === typeof ""){
+		if (args.messages){
+			standartargs.socket.send(`PRIVMSG #${args.originChannel} :${message}`);
+			return true;
+		}
+		return false;
+	}
+	else{
+		if (args){
+			message.send(`PRIVMSG #${standartargs} :${text}`);
+			return true;
+		}
+		return false;
+	}
+
 }

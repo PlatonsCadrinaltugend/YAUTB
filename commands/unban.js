@@ -1,5 +1,8 @@
 exports.execute = {
     name:"unban",
+    description:"Unbans the given User. Admin only.",
+    usage:"unban <user>",
+    Roles: ROLES.MODERATOR,
     code:(async function unban(args, standartargs){
         const util = require('../src/util.js');
         const modactions = require('../src/modactions.js');

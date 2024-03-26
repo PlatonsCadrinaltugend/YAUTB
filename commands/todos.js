@@ -1,5 +1,8 @@
 exports.execute = {
     name:"todos",
+    description:"Sends every current Todo. Admin only.",
+    usage:"todos <optional:delete <numbers>>",
+    Roles: ROLES.ADMIN,
     code:(async function todos(args, standartargs){
         const util = require('../src/util.js');
 
@@ -8,11 +11,11 @@ exports.execute = {
                 let list = Array.from(standartargs.util_obj["idea"]);
                 if (list.length>0){
                     for (var x=1; x<=list.length; x++){
-                        standartargs.socket.send(`PRIVMSG #${args.originChannel} :${x}. ${list[x-1]}`)
+                        util.send(args, standartargs, x+ "." + list[x-1])
                     }
                 }
                 else{
-                    standartargs.socket.send(`PRIVMSG #${args.originChannel} :No TODOs found`)
+                    util.send(args, standartargs, 'No TODOs found')
 
                 }
             }
@@ -32,6 +35,11 @@ exports.execute = {
                     }
                     standartargs.util_obj["idea"] = newlist.reverse();
                     util.save(standartargs.util_obj, '../data/util.json');
+                }
+                if(args.message.split(" ")[1] == "random"){
+                    let number = Math.floor(Math.random() * standartargs.util_obj['idea'].length);
+                    util.send(args, standartargs, standartargs.util_obj['idea'][number])
+
                 }
             }
 

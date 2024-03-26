@@ -1,5 +1,8 @@
 exports.execute = {
     name:"suggest",
+    description:"Lets you suggest ideas which could be implemented in the future.",
+    usage:"suggest <idea>",
+    Roles: ROLES.USER,
     code:(function suggest(args, standartargs){
         console.log(standartargs);
         const util = require('../src/util.js')
@@ -11,9 +14,9 @@ exports.execute = {
             if (obj != null){
                 standartargs.util_obj = obj;
             }
-            standartargs.socket.send(`PRIVMSG #${args.originChannel} :Saving your suggestion. Thank you for your help improving this bot luvv`);
+            util.send(args,standartargs, 'Saving your suggestion. Thank you for your help improving this bot luvv');
         }else{
-            standartargs.socket.send(`PRIVMSG #${args.originChannel} :/me Usage: !suggest <suggestion>`);
+            util.send(args, standartargs, `/me Usage: ${util.Prefix}suggest <suggestion>`);
         }
         return standartargs;
     })

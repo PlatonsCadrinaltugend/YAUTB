@@ -30,15 +30,23 @@ exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove
 	  }
 	}
 
-exports.userIDIsOnWhitelist = async function userIDIsOnWhitelist (id, channelid) {
-	let data = await fs.readFile('../data/Whitelist.json', "binary");
-	const obj = JSON.parse(data);
-	if (obj.hasOwnProperty(channelid)){
-		let list = Array.from(obj[channelid]);
-		console.log(list);
-		return list.includes(id);
+exports.userAccess = async function userAccess(args, standartargs) {
+	const obj = standartargs.whitelist_obj;
+	let id = args.idsender;
+	if (obj['global'][id] == "ROLES.MODERATOR"){
+		return ROLES.MODERATOR;
 	}
-	return false;
+	if (obj['global'][id] == "ROLES.ADMIN"){
+		return ROLES.ADMIN;
+	}
+	if (obj['local'][args.originChannelID]){
+		if (obj['local'][args.originChannelID][id]){
+			if (obj['local'][args.originChannelID][id] == "ROLES.CHANNEL_MODERATOR"){
+				return ROLES.CHANNEL_MODERATOR;
+			}
+		}
+	}
+	return ROLES.USER;
 }
 
 //TODO split whitelist into musiccontroller and modactionscontroller

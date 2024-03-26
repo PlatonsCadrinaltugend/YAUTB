@@ -1,5 +1,8 @@
 exports.execute = {
     name:"timeout",
+    description:"Timeouts a specific user. Admin only.",
+    usage:"timeout <user> <time in seconds>",
+    Roles: ROLES.MODERATOR,
     code:(async function timeout(args, standartargs){
         const util = require('../src/util.js')
         const modactions = require('../src/modactions.js');

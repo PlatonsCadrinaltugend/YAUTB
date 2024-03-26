@@ -1,7 +1,11 @@
 exports.execute = {
     name:"ping",
+    description:"PONG",
+    usage:"ping",
+    Roles: ROLES.USER,
     code:(async function ping(args, standartargs){
-        standartargs.socket.send(`PRIVMSG #${args.originChannel} :PONG`)
+        const util = require('../src/util.js')
+        util.send(args, standartargs, 'PONG')
         return standartargs;
     })
 }
