@@ -1,13 +1,13 @@
 exports.execute = {
     name:"7tvremove",
     description:"Removes 7tv emotes",
-    usage:"7tvremove <emotename> <optional:emotename> ...",
+    usage:"7tvremove <emotename>",
     Roles: ROLES.CHANNEL_MODERATOR,
     code:(async function ping(args, standartargs){
         const seventv = require('../src/seventv.js');
         const util = require('../src/util.js');
-        let list = util.getEmotename(args);
-        if (list == null){
+        let name = util.getEmotename(args);
+        if (name == null){
             util.send(args, standartargs,'Please specify an emote.');
             return standartargs;
         }
@@ -18,16 +18,15 @@ exports.execute = {
             util.send(args, standartargs,'ERROR: Insufficient Privileges');
             return standartargs;
         }
-        util.send(args, standartargs,'Trying to remove emotes Loading');
-        for (var name of list){
-            let emote = await seventv.getEmoteInSet(name, setID);
-            if (emote == null){
-                util.send(args, standartargs,'ERROR: Emote ${name} not found');
-                continue;
-            }
-            seventv.editEmoteSet(setID, emote.id, emote.name, "REMOVE", auth);
+        util.send(args, standartargs,'Trying to remove emote Loading');
+        let emote = await seventv.getEmoteInSet(name, setID);
+        if (emote == null){
+            util.send(args, standartargs,`ERROR: Emote ${name} not found`);
         }
-        util.send(args, standartargs,'Successfully removed emotes');
+        else{
+            seventv.editEmoteSet(setID, emote.id, emote.name, "REMOVE", auth);
+
+        }    
         return standartargs;
     })
 }   

@@ -15,7 +15,7 @@ exports.execute = {
         cmds = cmds.split(", ").reverse();
         cmds.shift();
         cmds = cmds.reverse().join(", ");
-        util.send(args, standartargs,'Available Commands: ${cmds}');
+        util.send(args, standartargs,`Available Commands: ${cmds}`);
         return standartargs;
     })
 }

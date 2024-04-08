@@ -11,7 +11,6 @@ const util = require('./util.js');
  *            userIDIsOnWhitelist: boolean, originChannelID: String}}
  */
 exports.banUser = async function banUser (id, username, reason, userIDIsOnWhitelist, originChannelID){
-		if (userIDIsOnWhitelist){
 		const response = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${originChannelID}&moderator_id=${util.BOTID}`, {
 			body: JSON.stringify({
 				"data": {
@@ -20,17 +19,15 @@ exports.banUser = async function banUser (id, username, reason, userIDIsOnWhitel
 				}
 			}),
 		headers: {
-			Authorization: `Bearer ${oAuth}`,
+			Authorization: `Bearer ${util.oAuth}`,
 			"Client-Id": util.CLIENT_ID,
 			"Content-Type": "application/json"
 		},
 		method: "POST"
 		}).then(console.log(`Banned User ${username}`)).catch((error) => console.log(error));
-	}
 }
 
 exports.unbanUser = async function unbanUser (id, userIDIsOnWhitelist, originChannelID){
-	if (userIDIsOnWhitelist){
 		const response = fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${originChannelID}&moderator_id=${util.BOTID}&user_id=${id}`, {
 			headers: {
 			Authorization: `Bearer ${oAuth}`,
@@ -38,12 +35,10 @@ exports.unbanUser = async function unbanUser (id, userIDIsOnWhitelist, originCha
 			},
 			method: "DELETE"
 		}) 
-	}
 
 }
 
 exports.timeoutUser = async function timeoutUser (id, username, usernameSender, userIDIsOnWhitelist, time, originChannelID){
-	if (userIDIsOnWhitelist){
 		const response = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${originChannelID}&moderator_id=${util.BOTID}`, {
 			body: JSON.stringify({
 				"data": {
@@ -59,7 +54,6 @@ exports.timeoutUser = async function timeoutUser (id, username, usernameSender, 
 		},
 		method: "POST"
 		}).then(console.log(`Timeouted User ${username} for ${time} seconds`)).catch((error) => console.log(error));
-	}
 }
 
 exports.crossban = async function crossban (UserID, username, idsender, originChannel, reason, obj){

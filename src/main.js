@@ -97,7 +97,7 @@ socket.addEventListener('message', async event => {
 			console.log(MessageEvent.message);
 			MessageEvent.originChannelID =await util.getUserIdByUserName(MessageEvent.originChannel);
 			MessageEvent.idsender = await util.getUserIdByUserName(MessageEvent.usernameSender);
-			MessageEvent.userAccess = await whitelist.userAccess(MessageEvent, standartargs);
+			MessageEvent.userAccess = await whitelist.userAccess(MessageEvent, standartargs, MessageEvent.idsender);
 			MessageEvent.messages = util.getMessages(MessageEvent, standartargs);
 			console.log(MessageEvent.userAccess);
 			console.log(MessageEvent.messages);

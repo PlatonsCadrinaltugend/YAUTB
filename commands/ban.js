@@ -11,7 +11,11 @@ exports.execute = {
         let username = args.message.split(" ")[1];
         username = username.replace("@", "");
         let id = await util.getUserIdByUserName(username);
-        if (whitelist.userAccess(id, standartargs) != ROLES.ADMIN){
+        let access = await Promise.resolve(await whitelist.userAccess(args, standartargs, id)).then(function(data){return data;});
+        console.log("------------------------------------ ---------------------------------")
+        console.log(access);
+        console.log("------------------------------------ ---------------------------------")
+        if (access != ROLES.ADMIN){
             await modactions.banUser(id, username, `Automated Ban By YAUTB. Authorized by ${args.usernameSender}`, args.userIDIsOnWhitelist, args.originChannelID).then(function(data) {return data;}).catch((error) => console.log(error));
         }
         return standartargs;

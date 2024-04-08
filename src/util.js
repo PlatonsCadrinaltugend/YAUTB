@@ -170,6 +170,19 @@ exports.followage = async function followage(data, args, standartargs, channel, 
 	}
 }
 
+exports.subage = async function subage(data, args, standartargs, channel, user){
+	data = await Promise.resolve(data).then(function(data) {return data;}).catch((error) => console.log(error));
+	console.log(data);
+	console.log(data['followedAt']);
+	if (data['streak'] == null){
+		standartargs.socket.send(`PRIVMSG #${args.originChannel} :${user} is not subcribed to ${channel}.`)
+	}
+	else{
+		let streak = data['streak'];
+		standartargs.socket.send(`PRIVMSG #${args.originChannel} :${user} is subscribed to ${channel} with a Tier-${data.meta.tier} ${data.meta.type}-subscription for ${data.cumulative.months} months currently on a ${streak.months}-month streak ending/renewing in ${data.streak.daysRemaining} days.`);
+	}
+}
+
 exports.getUsernameAndChannel = function getUsernameAndChannel(args){
 	let mes = args.message.split(" ");
 	// mes.length == 0 does not have to be covered, because the function would never be called
@@ -295,12 +308,7 @@ exports.getUsername = function getUsername(args){
 
 exports.getEmotename = function getEmotename(args){
 	if (args.message.split(" ").length > 1){
-		let list = [];
-		let mes = args.message.split(" ");
-		for (var x = 1;x<mes.length; x++){
-			list.push(mes[x]);
-		}
-		return list;
+		return args.message.split(" ")[1];
 	}
 	return null;
 }

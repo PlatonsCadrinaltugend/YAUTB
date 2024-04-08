@@ -1,7 +1,7 @@
 exports.execute = {
     name:"7tvadd",
     description:"Adds 7tv emotes",
-    usage:"7tvyoink <channel> <emote> ...",
+    usage:"7tvyoink <channel> <emote>",
     Roles: ROLES.CHANNEL_MODERATOR,
     code:(async function stvadd(args, standartargs){
         const seventv = require('../src/seventv.js');
@@ -31,11 +31,10 @@ exports.execute = {
         }
         let emote = await seventv.getEmoteInSet(name, channelSetID);
         if (emote == null){
-            util.send(args, standartargs,'ERROR: Emote ${name} not found');
+            util.send(args, standartargs,`ERROR: Emote ${name} not found`);
             return standartargs;
         }
         seventv.editEmoteSet(setID, emote.id, emote.name, "ADD", auth);
-        util.send(args, standartargs,'Successfully added emotes');
         return standartargs;
     })
 }   

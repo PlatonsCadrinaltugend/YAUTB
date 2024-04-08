@@ -30,9 +30,8 @@ exports.saveWhitelist = saveWhitelist = (userID, originChannel, username, remove
 	  }
 	}
 
-exports.userAccess = async function userAccess(args, standartargs) {
+exports.userAccess = async function userAccess(args, standartargs, id) {
 	const obj = standartargs.whitelist_obj;
-	let id = args.idsender;
 	if (obj['global'][id] == "ROLES.MODERATOR"){
 		return ROLES.MODERATOR;
 	}

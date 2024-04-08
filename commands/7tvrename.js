@@ -20,7 +20,7 @@ exports.execute = {
             return standartargs;
         }
         console.log(name, newname);
-        util.send(args, standartargs,'Trying to rename emote ${name} Loading');
+        util.send(args, standartargs,`Trying to rename emote ${name} Loading`);
         let ID = await seventv.searchUsersByName(args.originChannel);
         let setID = await seventv.getEmoteSet(ID);
         let auth = await seventv.getAuth(ID);
@@ -34,7 +34,6 @@ exports.execute = {
             return standartargs;
         }
         seventv.editEmoteSet(setID, emote.id, newname, "UPDATE", auth);
-        util.send(args, standartargs,'Successfully renamed emote ${name} to ${newname}');
         return standartargs;
     })
 }   
