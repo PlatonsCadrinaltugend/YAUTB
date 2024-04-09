@@ -6,7 +6,7 @@ exports.execute = {
     code:(async function disableAutomod(args, standartargs){
         const util = require('../src/util.js')
         standartargs.util_obj = await util.setAutomod(args.idsender, false, standartargs.util_obj);
-        util.send(args, standartargs,'/me Disabled automod for your channel ApuApproved');
+        util.send(args.messages, args.originChannel, standartargs.socket,'/me Disabled automod for your channel ApuApproved');
         return standartargs;
     })
 }

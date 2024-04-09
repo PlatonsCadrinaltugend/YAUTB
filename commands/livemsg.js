@@ -10,7 +10,7 @@ exports.execute = {
         let id = await util.getUserIdByUserName(name);
         if(standartargs.util_obj.subscribed[id]){
             if (standartargs.util_obj.subscribed[id].includes(args.idsender)){
-                util.send(args, standartargs, `Notifications for ${name} already enabled`);
+                util.send(args.messages, args.originChannel, standartargs.socket,`Notifications for ${name} already enabled`);
                 return standartargs;
             }  
         }
@@ -33,7 +33,7 @@ exports.execute = {
                 }
                 util.save(standartargs.util_obj, '../data/util.json');
 
-            util.send(args, standartargs, `You successfully added livemessages for ${name}`);
+            util.send(args.messages, args.originChannel, standartargs.socket,`You successfully added livemessages for ${name}`);
         }
         else if (mes[1] == "remove"){
 

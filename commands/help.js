@@ -14,8 +14,8 @@ exports.execute = {
 			if(fs2.existsSync(path)){
 				let command = require(path);
 				console.log(command);
-				util.send(args, standartargs,command.execute.description);
-                util.send(args, standartargs,`/me Usage: ${util.Prefix}${command.execute.usage}`);
+				util.send(args.messages, args.originChannel, standartargs.socket,command.execute.description);
+                util.send(args.messages, args.originChannel, standartargs.socket,`/me Usage: ${util.Prefix}${command.execute.usage}`);
 			}
         }
         return standartargs;

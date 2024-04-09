@@ -9,7 +9,7 @@ exports.execute = {
         }
         if (args.usernameSender == args.originChannel){
             standartargs.modify = !standartargs.modify;
-            standartargs.socket.send(`PRIVMSG #${args.originChannel} :/me Set Modify-Musik to ${standartargs.modify}`)
+           utils.send(args.messages, args.originChannel, standartargs.socket,`/me Set Modify-Musik to ${standartargs.modify}`)
         }
         return standartargs;
     })

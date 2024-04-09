@@ -9,7 +9,7 @@ exports.execute = {
             standartargs.socket.close();
         }
         else{
-            util.send(args, standartargs, 'An Error occured, either you have insufficient privileges or this is not the right channel.');
+            util.send(args.messages, args.originChannel, standartargs.socket, 'An Error occured, either you have insufficient privileges or this is not the right channel.');
         }
         return standartargs;
     })

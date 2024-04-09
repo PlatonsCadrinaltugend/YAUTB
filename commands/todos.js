@@ -11,11 +11,11 @@ exports.execute = {
                 let list = Array.from(standartargs.util_obj["idea"]);
                 if (list.length>0){
                     for (var x=1; x<=list.length; x++){
-                        util.send(args, standartargs, x+ "." + list[x-1])
+                        util.send(args.messages, args.originChannel, standartargs.socket, x+ "." + list[x-1])
                     }
                 }
                 else{
-                    util.send(args, standartargs, 'No TODOs found')
+                    util.send(args.messages, args.originChannel, standartargs.socket, 'No TODOs found')
 
                 }
             }
@@ -38,7 +38,7 @@ exports.execute = {
                 }
                 if(args.message.split(" ")[1] == "random"){
                     let number = Math.floor(Math.random() * standartargs.util_obj['idea'].length);
-                    util.send(args, standartargs, standartargs.util_obj['idea'][number])
+                    util.send(args.messages, args.originChannel, standartargs.socket, standartargs.util_obj['idea'][number])
 
                 }
             }

@@ -14,9 +14,9 @@ exports.execute = {
             if (obj != null){
                 standartargs.util_obj = obj;
             }
-            util.send(args,standartargs, 'Saving your suggestion. Thank you for your help improving this bot luvv');
+            util.send(args.messages, args.originChannel, standartargs.socket, 'Saving your suggestion. Thank you for your help improving this bot luvv');
         }else{
-            util.send(args, standartargs, `/me Usage: ${util.Prefix}suggest <suggestion>`);
+            util.send(args.messages, args.originChannel, standartargs.socket, `/me Usage: ${util.Prefix}suggest <suggestion>`);
         }
         return standartargs;
     })

@@ -8,7 +8,7 @@ exports.execute = {
         const util = require('../src/util.js');
         let name = util.getEmotename(args);
         if (name == null){
-            util.send(args, standartargs,'Please specify an emote.');
+            util.send(args.messages, args.originChannel, standartargs.socket,'Please specify an emote.');
             return standartargs;
         }
         let newname = null;
@@ -16,21 +16,21 @@ exports.execute = {
             newname = args.message.split(" ")[2];
         }
         if (newname == null){
-            util.send(args, standartargs,'New name is undefined');
+            util.send(args.messages, args.originChannel, standartargs.socket,'New name is undefined');
             return standartargs;
         }
         console.log(name, newname);
-        util.send(args, standartargs,`Trying to rename emote ${name} Loading`);
+        util.send(args.messages, args.originChannel, standartargs.socket,`Trying to rename emote ${name} Loading`);
         let ID = await seventv.searchUsersByName(args.originChannel);
         let setID = await seventv.getEmoteSet(ID);
         let auth = await seventv.getAuth(ID);
         let emote = await seventv.getEmoteInSet(name, setID);
         if (emote == null){
-            util.send(args, standartargs,'ERROR: Emote not found');
+            util.send(args.messages, args.originChannel, standartargs.socket,'ERROR: Emote not found');
             return standartargs;
         }
         if (auth == null){
-            util.send(args, standartargs,'ERROR: Insufficient Privileges');
+            util.send(args.messages, args.originChannel, standartargs.socket,'ERROR: Insufficient Privileges');
             return standartargs;
         }
         seventv.editEmoteSet(setID, emote.id, newname, "UPDATE", auth);

@@ -14,7 +14,7 @@ exports.execute = {
         message.shift();
         let mes2 = message.join(" ");
         for (x=0;x<amount;x++){
-            util.send(args,standartargs, mes2);
+            util.send(args.messages, args.originChannel, standartargs.socket, mes2);
         }
         return standartargs;
     })

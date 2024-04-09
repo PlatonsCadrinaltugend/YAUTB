@@ -11,9 +11,9 @@ exports.execute = {
                     let list = Array.from(elem.bible);
                     let quote = list[Math.floor(Math.random()*list.length)];
                     if (quote == undefined){
-                        util.send(args, standartargs,'Bible is empty');
+                        util.send(args.messages, args.originChannel, standartargs.socket,'Bible is empty');
                     }else{
-                        util.send(args, standartargs, quote);
+                        util.send(args.messages, args.originChannel, standartargs.socket, quote);
                     }
                 }
             }
@@ -32,7 +32,7 @@ exports.execute = {
                     console.log(list);
                     elem.bible = list;
                     util.save(standartargs.util_obj, '../data/util.json');
-                    util.send(args, standartargs,'Success happi');
+                    util.send(args.messages, args.originChannel, standartargs.socket,'Success happi');
 
                 }
             }

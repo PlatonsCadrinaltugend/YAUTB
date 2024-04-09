@@ -17,7 +17,7 @@ exports.execute = {
                 await modactions.crossban(id, username, args.idsender, args.originChannel, reason, standartargs.util_obj);
             }
             else{
-                util.send(args, standartargs,'/me Usage: !crossban <user> <reason>');
+                util.send(args.messages, args.originChannel, standartargs.socket,'/me Usage: !crossban <user> <reason>');
             }
         }
         return standartargs;

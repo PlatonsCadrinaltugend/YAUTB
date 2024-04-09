@@ -8,8 +8,8 @@ const oAuth = util.oAuth;
 const fs2= require('fs');
 const nick = `njdagdoiad`;
 const socket = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
-let eventsub = new WebSocket("wss://eventsub.wss.twitch.tv/ws?keepalive_timeout_seconds=600");
-let eventid;
+// let eventsub = new WebSocket("wss://eventsub.wss.twitch.tv/ws?keepalive_timeout_seconds=600");
+// let eventid;
 ROLES =  {
 	USER:1,
 	CHANNEL_MODERATOR:2,
@@ -21,7 +21,7 @@ async function init(){
 	let util_obj = JSON.parse(util_data);
 	let commands_data = await fs.readFile('../data/customcommands.json', "utf8");
 	let command_obj = JSON.parse(commands_data);
-	let whitelist_data = await fs.readFile('../data/whitelist.json', "binary");
+	let whitelist_data = await fs.readFile('../data/whitelist.json', "utf8");
 	let whitelist_obj = JSON.parse(whitelist_data);
 	standartargs = {
 		modify:false,
@@ -29,62 +29,60 @@ async function init(){
 		socket:socket,
 		util_obj:util_obj,
 		whitelist_obj: whitelist_obj,
-		command_obj:command_obj,
-		eventsub:eventsub,
-		eventid:eventid
+		command_obj:command_obj
+		// eventsub:eventsub,
+		// eventid:eventid
 	}
-	open("wss://eventsub.wss.twitch.tv/ws?keepalive_timeout_seconds=600");
+	// open("wss://eventsub.wss.twitch.tv/ws?keepalive_timeout_seconds=600");
 }
 init()
-function open(link){
-	eventsub = new WebSocket(link);
-	standartargs.eventsub = eventsub;
-}
-eventsub.addEventListener('message', async event=>{
-	console.log(event.data);
-	let data = JSON.parse(event.data);
-	console.log(data);
-	if (data.metadata.message_type == "session_welcome"){
-		eventid = data.payload.session.id;
-		standartargs.eventid = eventid;
-		for (var elem of Object.keys(standartargs.util_obj.subscribed)){
-			util.joinlivemsg(standartargs, elem);
-		}
-	}
-	if (data.metadata.message_type == "notification"){
-		if (data.payload.subscription.type == "stream.online"){
-			let id = data.event.broadcaster_user_id;
-			let user = data.event.broadcaster_user_name;
-			util.notifyChannels(standartargs, id, user);
-		}
-	}
-	if (data.metadata.message_type == "session_reconnect"){
-		open(data.payload.reconnect_url);
-		eventsub.close();
-	}
-	if (event.data.includes("PING")) {
-		eventsub.send("PONG");
-	}
-})
+// function open(link){
+// 	eventsub = new WebSocket(link);
+// 	standartargs.eventsub = eventsub;
+// }
+// eventsub.addEventListener('message', async event=>{
+// 	console.log(event.data);
+// 	let data = JSON.parse(event.data);
+// 	console.log(data);
+// 	if (data.metadata.message_type == "session_welcome"){
+// 		eventid = data.payload.session.id;
+// 		standartargs.eventid = eventid;
+// 		for (var elem of Object.keys(standartargs.util_obj.subscribed)){
+// 			util.joinlivemsg(standartargs, elem);
+// 		}
+// 	}
+// 	if (data.metadata.message_type == "notification"){
+// 		if (data.payload.subscription.type == "stream.online"){
+// 			let id = data.event.broadcaster_user_id;
+// 			let user = data.event.broadcaster_user_name;
+// 			util.notifyChannels(standartargs, id, user);
+// 		}
+// 	}
+// 	if (data.metadata.message_type == "session_reconnect"){
+// 		open(data.payload.reconnect_url);
+// 		eventsub.close();
+// 	}
+// 	if (event.data.includes("PING")) {
+// 		eventsub.send("PONG");
+// 	}
+// })
 
 
 socket.addEventListener('open', async () => {
-	socket.send(`PASS oauth:${oAuth}`);
-	socket.send(`NICK ${nick}`);
+	socket.send(`PASS oauth:${oAuth}\r\n`);
+	socket.send(`NICK ${nick}\r\n`);
 	let channels = await (util.getChannelNamesOfJoinedChannels()).then(function(data) {return data;}).catch((error) => console.log(error));
 	console.log(channels);
 	for (var channel of channels) {
-		socket.send(`JOIN #${channel}`);
+		socket.send(`JOIN #${channel}\r\n`);
 		console.log(`Joined ${channel}`);
-		if (standartargs.Messages){
-			socket.send(`PRIVMSG #${channel} :kok`);
-		}
 	}
 })
 
 socket.addEventListener('message', async event => {
 	if (socket.readyState === WebSocket.OPEN) {
 		if (!event.data.includes(":tmi.twitch.tv")){
+			console.log(event.data);
 			let MessageEvent = {
 				usernameSender: util.getUsernameByEvent(event),
 				originChannel: util.getOriginChannelByEvent(event),
@@ -94,16 +92,22 @@ socket.addEventListener('message', async event => {
 				userAccess:ROLES.USER,
 				messages:false
 			}
+			if (MessageEvent.originChannel == null || MessageEvent.usernameSender == null || MessageEvent.message == null){
+				return;
+			}
 			console.log(MessageEvent.message);
 			MessageEvent.originChannelID =await util.getUserIdByUserName(MessageEvent.originChannel);
 			MessageEvent.idsender = await util.getUserIdByUserName(MessageEvent.usernameSender);
-			MessageEvent.userAccess = await whitelist.userAccess(MessageEvent, standartargs, MessageEvent.idsender);
+			MessageEvent.userAccess = userAccess = await whitelist.userAccess(standartargs, MessageEvent.idsender);
+			if (userAccess<ROLES.MODERATOR){
+				let ismod = await Promise.resolve(await util.isMod(MessageEvent.originChannel, MessageEvent.idsender)).then(function(data){return data;}).catch((error) => console.log(error));
+				if (ismod){
+					MessageEvent.userAccess = ROLES.CHANNEL_MODERATOR;
+				}
+			}
 			MessageEvent.messages = util.getMessages(MessageEvent, standartargs);
-			console.log(MessageEvent.userAccess);
-			console.log(MessageEvent.messages);
 			if (MessageEvent.messages == false && MessageEvent.userAccess < ROLES.ADMIN){
 				console.log(MessageEvent.userAccess);
-				return;
 			}
 			let [usernameSender,originChannel, originChannelID, message, idsender] = [MessageEvent.usernameSender, MessageEvent.originChannel,MessageEvent.originChannelID, MessageEvent.message, MessageEvent.idsender]; 
 			let botInChannel = await util.automodActivated(originChannel);

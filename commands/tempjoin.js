@@ -11,12 +11,12 @@ exports.execute = {
             if (username) {
                 for (elem of standartargs.util_obj['list']){
                     if (elem['id'] == id){
-                        util.send(args, standartargs,'I already joined that Channel UNLUCKY')
+                        util.send(args.messages, args.originChannel, standartargs.socket,'I already joined that Channel UNLUCKY')
                         return standartargs;
                     }
                 }
                 console.log(`Username: ${username}, User ID: ${id}`);
-                util.send(args, standartargs,'I sucessfully joined that Channel ApuApproved');
+                util.send(args.messages, args.originChannel, standartargs.socket,'I sucessfully joined that Channel ApuApproved');
                 standartargs.socket.send(`JOIN #${username}`);
                 console.log(`Joined ${username}`);
                 }
