@@ -16,6 +16,7 @@ exports.execute = {
             return standartargs;
         }
         let channel = mes[1];
+        channel = channel.replace("@", "");
         if (channel == null){
             return standartargs;
         }
