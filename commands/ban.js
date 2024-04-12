@@ -11,7 +11,7 @@ exports.execute = {
         let username = args.message.split(" ")[1];
         username = username.replace("@", "");
         let id = await util.getUserIdByUserName(username);
-        let access = await Promise.resolve(await whitelist.userAccess(args, standartargs, id)).then(function(data){return data;});
+        let access = await Promise.resolve(await whitelist.userAccess(standartargs, id)).then(function(data){return data;});
         console.log("------------------------------------ ---------------------------------")
         console.log(access);
         console.log("------------------------------------ ---------------------------------")
